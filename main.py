@@ -6,9 +6,11 @@ from datetime import datetime, timedelta, timezone, time,date
 import pytz
 from discord.ext import tasks
 
+import asyncio
+
 # Set the time of day for the message count to run.
 utc = timezone.utc
-# run_at_time = time(hour=10, minute=0, tzinfo=utc)
+
 run_at_time = time(hour=10, minute=0, tzinfo=utc)
 
 # Retrieve Discord App Token from environment variable
@@ -19,8 +21,7 @@ eastern_tz = pytz.timezone('Australia/Sydney')
 hrs_diff = int(datetime.now(pytz.timezone('Australia/Sydney')).strftime('%z').split('00')[0].split('+')[1])
 
 # Declare intents
-intents=discord.Intents.default()
-intents.message_content = True
+intents=discord.Intents.all()
 
 # Create Discord Client
 client = discord.Client(intents=intents)
@@ -59,47 +60,28 @@ async def daily_channel_message_count():
             # If the channel is the general channel then store it for use.
             if channel.name == 'general':
                 general_channel = channel
-
-            # Reset the counter
-            message_count = 0
-
-            # Get the channel message history
-            messages = [message async for message in channel.history(limit=1)]
-
-            # Loop through messages
-            for msg in messages:
-
-                # Add message if occurred in the last 24 hours
-                if msg.created_at.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
-                    message_count += 1
-
-                # Stop if occurred over 24 hours ago
-                if msg.created_at.replace(tzinfo=utc) < day_ago.replace(tzinfo=utc):
-                    break
             
-            if message_count > 0:
-                announcement += channel.jump_url +"\n\n"
+            try:
+                last_message = await channel.fetch_message(channel.last_message_id)
+                last_message_date = last_message.created_at
+
+                if last_message_date.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
+                    announcement += channel.jump_url +"\n\n"
+            except:
+                print("Error with last message")
 
         announcement += """\n\nForum Threads:\n\n"""
         
         for forum in guild.forums:
             for thread in forum.threads:
-                messages = [message async for message in thread.history(limit=1)]
+                try:
+                    last_thread_message = await thread.fetch_message(thread.last_message_id)
+                    last_thread_message_date = last_thread_message.created_at
 
-                message_thread_count = 0
-
-                for msg in messages:
-
-                    # Add message if occurred in the last 24 hours
-                    if msg.created_at.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
-                        message_thread_count += 1
-
-                    # Stop if occurred over 24 hours ago
-                    if msg.created_at.replace(tzinfo=utc) < day_ago.replace(tzinfo=utc):
-                        break
-
-                if message_thread_count > 0:
-                    announcement += thread.jump_url +"\n\n"
+                    if last_thread_message_date.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
+                        announcement += thread.jump_url +"\n\n"
+                except:
+                    print("Error with last message in that thread")
 
         announcement += "24 hour period from 9pm yesterday to 9pm today."
 
