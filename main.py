@@ -4,9 +4,10 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone, time,date
 import pytz
-from discord.ext import tasks
 
-import asyncio
+
+from discord.ext import tasks
+from discord import app_commands
 
 # Set the time of day for the message count to run.
 utc = timezone.utc
@@ -25,6 +26,7 @@ intents=discord.Intents.all()
 
 # Create Discord Client
 client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 
 # On Ready - On bot run - start the daily loop.
 @client.event
@@ -36,10 +38,7 @@ async def on_ready():
 
     daily_channel_message_count.start()
 
-
-# Function to run daily at a specific time
-@tasks.loop(time=run_at_time)
-async def daily_channel_message_count():
+async def getActivity():
         
     # current datetime and day ago is the time now and 24 hours prior.
     current_dateTime = datetime.now()
@@ -88,6 +87,12 @@ async def daily_channel_message_count():
             # Send to general chat
         await general_channel.send(announcement)
 
+# Function to run daily at a specific time
+@tasks.loop(time=run_at_time)
+async def daily_channel_message_count():
+    await getActivity()
+    
+
 # Command to inform when it will happen
 @client.event
 async def on_message(message):
@@ -96,6 +101,7 @@ async def on_message(message):
         return
     
     if message.content == '$activity':
-        await message.channel.send("I go off at "+str((datetime.combine(date.today(), run_at_time) + timedelta(hours=hrs_diff)).strftime("%H:%M:%S %d/%m/%Y")))
+        # await message.channel.send("I go off at "+str((datetime.combine(date.today(), run_at_time) + timedelta(hours=hrs_diff)).strftime("%H:%M:%S %d/%m/%Y")))
+        await getActivity()
 
 client.run(TOKEN)
