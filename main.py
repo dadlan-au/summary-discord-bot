@@ -100,7 +100,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    if message.content == '$activity':
+    if message.content == '$activity' and message.channel.name == 'general':
         # await message.channel.send("I go off at "+str((datetime.combine(date.today(), run_at_time) + timedelta(hours=hrs_diff)).strftime("%H:%M:%S %d/%m/%Y")))
         await getActivity()
 
