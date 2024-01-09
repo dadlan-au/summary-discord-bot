@@ -1,6 +1,11 @@
 # Summary Discord Bot
 
+## Update
 
+Install pip dependencies via:
+```bash
+pip install -r requirements.txt
+```
 
 
 
