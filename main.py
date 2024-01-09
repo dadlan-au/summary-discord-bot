@@ -48,7 +48,7 @@ async def getActivity():
     general_channel = 0
 
     # Message string for announcement
-    announcement = """**Daily Activity**\n\nChannels:\n\n"""
+    announcement = """# Daily Activity \n ## Channels"""
 
     # Loop through all the guilds the client is connected to.
     for guild in client.guilds:
@@ -65,11 +65,11 @@ async def getActivity():
                 last_message_date = last_message.created_at
 
                 if last_message_date.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
-                    announcement += channel.jump_url +"\n\n"
+                    announcement += "- " + channel.jump_url +"\n"
             except:
                 print("Error with last message")
 
-        announcement += """\n\nForum Threads:\n\n"""
+        announcement += """## Forum Threads"""
         
         for forum in guild.forums:
             for thread in forum.threads:
@@ -78,7 +78,7 @@ async def getActivity():
                     last_thread_message_date = last_thread_message.created_at
 
                     if last_thread_message_date.replace(tzinfo=utc) > day_ago.replace(tzinfo=utc):
-                        announcement += thread.jump_url +"\n\n"
+                        announcement += "- " + thread.jump_url +"\n"
                 except:
                     print("Error with last message in that thread")
 
