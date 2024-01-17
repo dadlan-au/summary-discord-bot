@@ -43,9 +43,9 @@ async def on_ready():
 
     daily_channel_message_count.start()
 
-
-async def getActivity():
-    # current datetime and day ago is the time now and 24 hours prior.
+# Function to run daily at a specific time
+@tasks.loop(time=run_at_time)
+async def daily_channel_message_count():
     current_dateTime = datetime.now()
     day_ago = current_dateTime.replace(tzinfo=None) - timedelta(hours=24)
 
@@ -102,12 +102,6 @@ async def getActivity():
             print("No general channel found")
 
 
-# Function to run daily at a specific time
-@tasks.loop(time=run_at_time)
-async def daily_channel_message_count():
-    await getActivity()
-
-
 # Command to inform when it will happen
 @client.event
 async def on_message(message):
@@ -116,7 +110,7 @@ async def on_message(message):
 
     if message.content == "$activity" and message.channel.name == "general":
         # await message.channel.send("I go off at "+str((datetime.combine(date.today(), run_at_time) + timedelta(hours=hrs_diff)).strftime("%H:%M:%S %d/%m/%Y")))
-        await getActivity()
+        await daily_channel_message_count()
 
 
 def render_template(channels: List, threads: List) -> str:
