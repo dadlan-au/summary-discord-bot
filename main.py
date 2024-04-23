@@ -20,6 +20,8 @@ run_at_time = time(hour=10, minute=0, tzinfo=utc)
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+CHANNEL = os.getenv("DISCORD_CHANNEL")
+
 eastern_tz = pytz.timezone("Australia/Sydney")
 hrs_diff = int(
     datetime.now(pytz.timezone("Australia/Sydney"))
@@ -60,7 +62,7 @@ async def daily_channel_message_count():
         # Loop through all the text channels on the server
         for channel in guild.text_channels:
             # If the channel is the general channel then store it for use.
-            if channel.name == "general":
+            if channel.name == CHANNEL:
                 general_channel = channel
 
             try:
@@ -108,7 +110,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content == "$activity" and message.channel.name == "general":
+    if message.content == "$activity" and message.channel.name == CHANNEL:
         # await message.channel.send("I go off at "+str((datetime.combine(date.today(), run_at_time) + timedelta(hours=hrs_diff)).strftime("%H:%M:%S %d/%m/%Y")))
         await daily_channel_message_count()
 
