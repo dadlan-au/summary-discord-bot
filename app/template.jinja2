@@ -1,10 +1,10 @@
-# Daily Activity
+# Daily Activity 1
 {% if channels | length > 0 %}
 ### Channels
 {% for channel in channels %} * {{ channel.jump_url }}
 {% endfor %}{% endif %}
 {% if threads | length > 0 %}### Forum Threads
-{% for thread in threads %} * {{ thread.jump_url }}
+{% for thread in threads %} * {{ thread.parent.jump_url }} > {{ thread.jump_url }}
 {% endfor %}{% endif %}```ansi
 [2;30m24 hour period from 9pm yesterday to 9pm today.[0m
 ```
