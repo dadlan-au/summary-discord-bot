@@ -1,0 +1,9 @@
+name: dadlan_summarybot
+
+services:
+    summarybot:
+        hostname: summarybot
+        build:
+            context: ./
+            dockerfile: ./containers/summarybot/Dockerfile
+        restart: always
