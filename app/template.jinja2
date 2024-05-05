@@ -1,6 +1,6 @@
 # Daily Activity
 {% if threads | length > 0 %}### Forum Threads
-{% for thread in threads %} * {{ thread.parent.name }} » {{ thread.jump_url }}
+{% for thread in threads %}{{ thread.parent.name }} » {{ thread.jump_url }}
 {% endfor %}{% endif %}
 ```ansi
 [2;30m24 hour period from 9pm yesterday to 9pm today.[0m
