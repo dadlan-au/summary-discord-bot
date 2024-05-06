@@ -9,7 +9,7 @@ from config import AppSettings
 from discord.errors import Forbidden
 from discord.ext import tasks
 from dpn_pyutils.common import get_logger
-from render import render_template
+from render import render_template, split_rendered_text_max_length
 
 log = get_logger(__name__)
 
@@ -183,7 +183,22 @@ def create_bot(config: AppSettings) -> discord.Client:
             Path(config.RENDER_TEMPLATE_FILE), channels, threads
         )
 
-        await announce_channel.send(announcement)
+        if (
+            len(announcement) >= config.DISCORD_MAX_MESSAGE_LENGTH
+            and config.SUMMARY_USE_MULTIPLE_MESSAGES
+        ):
+            messages = split_rendered_text_max_length(
+                announcement, config.DISCORD_MAX_MESSAGE_LENGTH
+            )
+            for m in messages:
+                await announce_channel.send(m)
+        elif len(announcement) >= config.DISCORD_MAX_MESSAGE_LENGTH:
+            await announce_channel.send(
+                "Message too long for Discord and `SUMMARY_USE_MULTIPLE_MESSAGES = false`, "
+                "cannot send the announcement to this channel."
+            )
+        else:
+            await announce_channel.send(announcement)
 
     # Command to inform when it will happen
     @client.event
@@ -196,7 +211,6 @@ def create_bot(config: AppSettings) -> discord.Client:
             await daily_channel_message_count(message.channel.id)
 
     return client
-
 
 
 

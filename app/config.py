@@ -16,6 +16,8 @@ class AppSettings(BaseSettings):
     DISCORD_TOKEN: str
     SUMMARY_POST_AT_LOCALTIME: str
     DISCORD_POST_MESSAGE_CHANNEL: int
+    DISCORD_MAX_MESSAGE_LENGTH: int
+    SUMMARY_USE_MULTIPLE_MESSAGES: bool
     RENDER_TEMPLATE_FILE: str
 
 def get_config() -> AppSettings:
