@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import List
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -16,6 +17,7 @@ class AppSettings(BaseSettings):
     DISCORD_TOKEN: str
     SUMMARY_POST_AT_LOCALTIME: str
     DISCORD_BOT_GUILD_ID: int
+    DISCORD_BOT_CATEGORY_IDS: List[int]
     DISCORD_POST_MESSAGE_CHANNEL: int
     DISCORD_MAX_MESSAGE_LENGTH: int
     SUMMARY_USE_MULTIPLE_MESSAGES: bool
