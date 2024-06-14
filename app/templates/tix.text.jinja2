@@ -1,0 +1,9 @@
+# Ticket Summary
+{% for event in events %}**{{ event.name }}**
+Orders: {{ event.orders }}
+Spares Needed: {{ event.spares_needed }}
+
+{% endfor %}
+**TOTALS:**
+Orders: {{ total_orders }}
+Spares Needed: {{ total_spares_needed }}

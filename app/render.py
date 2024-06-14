@@ -5,7 +5,7 @@ from dpn_pyutils.file import read_file_text
 from jinja2 import BaseLoader, Environment
 
 
-def render_template(template_file: Path, channels: List, threads: List) -> str:
+def render_template(template_file: Path, **kwargs) -> str:
     """
     Renders a list of channels and threads into a template string
     """
@@ -14,7 +14,7 @@ def render_template(template_file: Path, channels: List, threads: List) -> str:
 
     tpl = environment.from_string(
         read_file_text(template_file),
-        globals={"channels": channels, "threads": threads},
+        globals=kwargs,
     )
 
     return tpl.render()
@@ -25,9 +25,9 @@ def split_rendered_text_max_length(rendered_text: str, max_length: int) -> List[
     Splits a rendered text based on maximum length, being careful to preserve URLs
     """
 
-    lines = rendered_text.split('\n')
+    lines = rendered_text.split("\n")
     result = []
-    current_text = ''
+    current_text = ""
 
     for line in lines:
         if line.strip():
@@ -37,7 +37,7 @@ def split_rendered_text_max_length(rendered_text: str, max_length: int) -> List[
                     result.append(current_text)
                 current_text = line
             else:
-                current_text += ('\n' if current_text else '') + line
+                current_text += ("\n" if current_text else "") + line
 
     if current_text:
         result.append(current_text)

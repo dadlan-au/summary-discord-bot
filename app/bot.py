@@ -1,17 +1,47 @@
+import uuid
 from datetime import datetime, time, timedelta
 from pathlib import Path
-from typing import List
+from typing import Any, List
 from zoneinfo import ZoneInfo
 
 import discord
 import pytz
-from config import AppSettings
+from config import AppSettings, get_config
+from discord import app_commands
 from discord.errors import Forbidden
 from discord.ext import tasks
+from discord.flags import Intents
 from dpn_pyutils.common import get_logger
+from humanitix.client import HumanitixClient
+from humanitix.summary import create_summary_from_event_data
 from render import render_template, split_rendered_text_max_length
+from rendering.graphic import create_image_tix, create_text_tix
 
 log = get_logger(__name__)
+
+config = get_config()
+
+
+class DiscordBotClient(discord.Client):
+    """
+    Wrapper class for a Discord Bot to speed up command sync
+    """
+
+    tree: app_commands.CommandTree
+
+    moderator_channel: discord.TextChannel
+
+    def __init__(self, *, intents: Intents, **options: Any) -> None:
+        """
+        Initialize the bot and sync it to a specific guild, so that we don't have to
+        wait for commands to sync
+        """
+        super().__init__(intents=intents, **options)
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        self.tree.copy_global_to(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
+        await self.tree.sync(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
 
 
 async def get_text_channel(
@@ -112,7 +142,7 @@ async def get_active_threads(client: discord.Client) -> List:
     return threads
 
 
-def create_bot(config: AppSettings) -> discord.Client:
+def create_bot(config: AppSettings) -> DiscordBotClient:
     """
     Creates the discord bot and ensures that it is configured appropriately
     """
@@ -130,12 +160,10 @@ def create_bot(config: AppSettings) -> discord.Client:
         run_at_time.tzinfo,
     )
 
-    # return
-
     # Declare intents
     intents = discord.Intents.default()
     intents.message_content = True
-    client = discord.Client(intents=intents)
+    client = DiscordBotClient(intents=intents)
 
     # On Ready - On bot run - start the daily loop.
     @client.event
@@ -180,7 +208,7 @@ def create_bot(config: AppSettings) -> discord.Client:
         )
         # Render the template
         announcement = render_template(
-            Path(config.RENDER_TEMPLATE_FILE), channels, threads
+            Path(config.RENDER_TEMPLATE_FILE), channels=channels, threads=threads
         )
 
         if (
@@ -210,43 +238,95 @@ def create_bot(config: AppSettings) -> discord.Client:
             # Reply in the channel that the message was posted
             await daily_channel_message_count(message.channel.id)
 
+    @client.tree.command(
+        name="tix",
+        description="Get the Humanitix data in graphical format for all or some of the subnets",
+    )
+    @app_commands.describe(
+        subnet="The name (or part) of the subnet to find",
+        format="The output method, valid options are 'image' or 'text'",
+    )
+    async def on_humanitix_graphics(
+        ctx: discord.interactions.Interaction,
+        subnet: str | None = None,
+        format: str = "image",
+    ):
+        """
+        Receives a graphics command
+        """
+        await humanitix_summary(ctx, subnet, format)
+
+    @client.tree.command(
+        name="tixt",
+        description="Get the Humanitix data in text format for all or some of the subnets",
+    )
+    @app_commands.describe(
+        subnet="The name (or part) of the subnet to find",
+    )
+    async def on_humanitix_text(
+        ctx: discord.interactions.Interaction,
+        subnet: str | None = None,
+    ):
+        """
+        Receives a text command
+        """
+        await humanitix_summary(ctx, subnet, "text")
+
+    async def humanitix_summary(
+        ctx: discord.interactions.Interaction,
+        subnet: str | None = None,
+        format: str = "image",
+    ):
+        """
+        Performs the humanitix summary
+        """
+
+        try:
+            log.debug("Received interaction from %s", ctx.user.name)
+            await ctx.response.defer(ephemeral=True, thinking=True)
+
+            if format is not None and format.lower() not in ["image", "text"]:
+                await ctx.followup.send(
+                    "Invalid format specified. Please use either 'image' or 'text'",
+                    ephemeral=True,
+                )
+                return
+
+            humanitix_client = HumanitixClient()
+            events = await humanitix_client.filter_events_by_name(subnet)
+            if events is None:
+                message = "No events found"
+                if subnet is not None:
+                    message = f"No events found for '{subnet}'"
+
+                await ctx.followup.send(message, ephemeral=True)
+                return
+
+            summary_data = await create_summary_from_event_data(events)
+            if format.lower() == "text":
+                formatted_message = create_text_tix(summary_data)
+                await ctx.followup.send(
+                    "Here is your text summary", ephemeral=True, silent=True
+                )
+                await ctx.channel.send(formatted_message)  # type: ignore
+
+            else:
+                image_path = create_image_tix(summary_data)
+                await ctx.followup.send(
+                    "Here is your image", ephemeral=True, silent=True
+                )
+                await ctx.channel.send(file=discord.File(image_path))  # type: ignore
+                image_path.unlink()
+
+        except discord.errors.DiscordException as e:
+            error_uuid = uuid.uuid4()
+            log.error(
+                "Error invoking command: %s \n ctx = %s uuid = %s", e, ctx, error_uuid
+            )
+            await ctx.followup.send(  # type: ignore
+                "An error occurred while processing your request. Please raise a helpdesk ticket and "
+                f"paste the following error code: {error_uuid}"
+            )
+            log.error("All responses sent, error handled")
+
     return client
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

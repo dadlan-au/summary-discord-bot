@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>Humanitix Updates</title>
+    </head>
+    <style>
+        body {
+            background: #171717;
+            color: white;
+            font-family: "IBM Plex Sans", sans-serif;
+            font-weight: 300;
+            font-style: normal;
+            max-width: 90%;
+            margin: 0 auto;
+            padding: 0 20px;
+            font-size: 1.15em;
+            line-height: 1.3;
+            background-image: url(./bg-TopTile.png),
+                url(./bg-BottomTile.png);
+            background-position:
+                top center,
+                bottom center;
+            background-repeat: repeat-x, repeat-x;
+            background-size: auto, auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            scrollbar-width: none;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            height: 80vh;
+            overflow: hidden;
+            margin-top: 5%;
+        }
+
+        table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+        }
+        th,
+        td {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 5px 10px;
+            text-align: left;
+            font-size: calc(1vw + 1.9vh);
+        }
+
+        th:nth-child(2),
+        td:nth-child(2) {
+            text-align: center;
+        }
+        th:nth-child(3),
+        td:nth-child(3) {
+            text-align: center;
+        }
+        th {
+            font-size: calc(1vw + 2vh);
+            background-color: rgba(23, 23, 23, 1);
+        }
+
+        tr.totals-row {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            border-top: 1vh solid rgba(255, 255, 255, 0.3);
+        }
+
+        colgroup col:first-child {
+            width: 60%;
+            text-align: left;
+        }
+        colgroup col:nth-child(2) {
+            width: 20%;
+        }
+        colgroup col:nth-child(3) {
+            width: 20%;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        tbody tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.18);
+        }
+    </style>
+    <body>
+        <div class="table-wrapper">
+            <table>
+                <colgroup>
+                    <col />
+                    <col />
+                    <col />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>SUBNET</th>
+                        <th>ORDERS</th>
+                        <th>SPARES NEEDED</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.name }}</td>
+                        <td>{{ event.orders }}</td>
+                        <td>{{ event.spares_needed }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="totals-row">
+                        <td>Totals</td>
+                        <td>{{ total_orders }}</td>
+                        <td>{{ total_spares_needed }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>

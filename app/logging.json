@@ -22,6 +22,11 @@
             "level": "INFO",
             "handlers": ["console"],
             "propagate": false
+        },
+        "httpx": {
+            "level": "ERROR",
+            "handlers": ["console"],
+            "propagate": false
         }
     },
     "root": {
