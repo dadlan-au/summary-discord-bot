@@ -18,9 +18,15 @@ async def create_summary_from_event_data(events: List[Event]):
         client = HumanitixClient()
         tickets = Tickets.model_validate(await client.get_event_tickets(e.id)).tickets
 
+        event_name = e.name
+        if config.RENDER_TIX_REPLACE_WORD_FROM_NAME != "":
+            event_name = event_name.replace(
+                config.RENDER_TIX_REPLACE_WORD_FROM_NAME, ""
+            )
+
         summary_event: Dict[str, Any] = {
             "id": e.id,
-            "name": e.name,
+            "name": event_name,
             "slug": e.slug,
             "orders": len(tickets),
         }

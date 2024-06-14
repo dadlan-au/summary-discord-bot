@@ -240,7 +240,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
     @client.tree.command(
         name="tix",
-        description="Get the Humanitix data in graphical format for all or some of the subnets",
+        description="Get the Humanitix data in graphical or text format for all or some of the subnets",
     )
     @app_commands.describe(
         subnet="The name (or part) of the subnet to find",
