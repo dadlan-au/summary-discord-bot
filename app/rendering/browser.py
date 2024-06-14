@@ -20,7 +20,9 @@ def generate_screenshot_file(source_file: Path, screenshot_path: Path):
 
     options = Options()
     options.add_argument("--headless")
+    options.add_argument('--no-sandbox')
     options.add_argument("--disable-gpu")
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument(
         f"--window-size={config.RENDER_TIX_SCREEN_WIDTH},{config.RENDER_TIX_SCREEN_HEIGHT}"
     )
