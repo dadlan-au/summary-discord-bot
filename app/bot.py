@@ -42,6 +42,17 @@ class DiscordBotClient(discord.Client):
         self.tree.copy_global_to(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
         await self.tree.sync(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
 
+async def raise_discord_error(ctx, e):
+    error_uuid = uuid.uuid4()
+    log.error(
+        "Error invoking command: %s \n ctx = %s uuid = %s", e, ctx, error_uuid
+    )
+    await ctx.followup.send(  # type: ignore
+        "An error occurred while processing your request. Please raise a helpdesk ticket and "
+        f"paste the following error code: {error_uuid}"
+    )
+    log.error("All responses sent, error handled")
+
 
 def create_bot(config: AppSettings) -> DiscordBotClient:
     """
@@ -137,8 +148,11 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             return
 
         if str(message.content).strip() == "$activity":
-            # Reply in the channel that the message was posted
-            await daily_channel_message_count(message.channel.id)
+            try:
+                # Reply in the channel that the message was posted
+                await daily_channel_message_count(message.channel.id)
+            except discord.errors.DiscordException as e:
+                await message.reply(f"An error occurred: {e}")
 
     @client.tree.command(
         name="activity",
@@ -150,10 +164,12 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         """
         Gets the actvity summary for the day
         """
-
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        await daily_channel_message_count(ctx.channel_id)
-        await ctx.followup.send("Activity summary sent", ephemeral=True)
+        try:
+            await ctx.response.defer(ephemeral=True, thinking=True)
+            await daily_channel_message_count(ctx.channel_id)
+            await ctx.followup.send("Activity summary sent", ephemeral=True)
+        except discord.errors.DiscordException as e:
+            await raise_discord_error(ctx, e)
 
     @client.tree.command(
         name="tix",
@@ -236,14 +252,6 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
                 image_path.unlink()
 
         except discord.errors.DiscordException as e:
-            error_uuid = uuid.uuid4()
-            log.error(
-                "Error invoking command: %s \n ctx = %s uuid = %s", e, ctx, error_uuid
-            )
-            await ctx.followup.send(  # type: ignore
-                "An error occurred while processing your request. Please raise a helpdesk ticket and "
-                f"paste the following error code: {error_uuid}"
-            )
-            log.error("All responses sent, error handled")
+            await raise_discord_error(ctx, e)
 
     return client
