@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "summary-discord-bot"
-version = "1.1.0"
-description = "A Discord server summary bot"
+version = "1.2.0"
+description = "A Discord server summary bot for DadLAN"
 authors = [
     "Liam <11690542+liammcnamara@users.noreply.github.com>",
     "davidpirogov <580286+davidpirogov@users.noreply.github.com>",
@@ -18,6 +18,11 @@ dpn-pyutils = "^3.12.3"
 pydantic = "^2.7.1"
 pydantic-settings = "^2.2.1"
 jinja2 = "^3.1.3"
+httpx = "^0.27.0"
+matplotlib = "^3.9.0"
+pillow = "^10.3.0"
+selenium = "^4.21.0"
+webdriver-manager = "^4.0.1"
 
 
 [build-system]
