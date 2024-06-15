@@ -69,6 +69,10 @@
             background-color: rgba(23, 23, 23, 1);
         }
 
+        tr.totals-row td {
+            font-size: calc(1vw + 3vh);
+        }
+
         tr.totals-row {
             font-weight: 600;
             background-color: rgba(23, 23, 23, 0.6) !important;
@@ -103,7 +107,7 @@
                 <thead>
                     <tr>
                         <th>SUBNET</th>
-                        <th>ORDERS</th>
+                        <th>TICKETS</th>
                         <th>SPARES NEEDED</th>
                     </tr>
                 </thead>
@@ -116,7 +120,7 @@
                     </tr>
                     {% endfor %}
                     <tr class="totals-row">
-                        <td>Totals</td>
+                        <td>TOTAL</td>
                         <td>{{ total_orders }}</td>
                         <td>{{ total_spares_needed }}</td>
                     </tr>

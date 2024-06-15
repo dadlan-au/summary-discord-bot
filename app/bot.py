@@ -42,11 +42,10 @@ class DiscordBotClient(discord.Client):
         self.tree.copy_global_to(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
         await self.tree.sync(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
 
+
 async def raise_discord_error(ctx, e):
     error_uuid = uuid.uuid4()
-    log.error(
-        "Error invoking command: %s \n ctx = %s uuid = %s", e, ctx, error_uuid
-    )
+    log.error("Error invoking command: %s \n ctx = %s uuid = %s", e, ctx, error_uuid)
     await ctx.followup.send(  # type: ignore
         "An error occurred while processing your request. Please raise a helpdesk ticket and "
         f"paste the following error code: {error_uuid}"
@@ -216,7 +215,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
         try:
             log.debug("Received interaction from %s", ctx.user.name)
-            await ctx.response.defer(ephemeral=True, thinking=True)
+            await ctx.response.defer(ephemeral=False, thinking=True)
 
             if format is not None and format.lower() not in ["image", "text"]:
                 await ctx.followup.send(
@@ -238,17 +237,14 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             summary_data = await create_summary_from_event_data(events)
             if format.lower() == "text":
                 formatted_message = create_text_tix(summary_data)
-                await ctx.followup.send(
-                    "Here is your text summary", ephemeral=True, silent=True
-                )
-                await ctx.channel.send(formatted_message)  # type: ignore
-
+                await ctx.followup.send(formatted_message, ephemeral=False)
             else:
                 image_path = create_image_tix(summary_data)
                 await ctx.followup.send(
-                    "Here is your image", ephemeral=True, silent=True
+                    #"Here is the registrations summary",
+                    ephemeral=False,
+                    file=discord.File(image_path),
                 )
-                await ctx.channel.send(file=discord.File(image_path))  # type: ignore
                 image_path.unlink()
 
         except discord.errors.DiscordException as e:
