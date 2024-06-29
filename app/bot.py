@@ -215,7 +215,10 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
     async def on_digest_channel(
         ctx: discord.interactions.Interaction,
     ):
-        await client.summariser.generate_summary(ctx)
+        try:
+            await client.summariser.generate_summary(ctx)
+        except Exception as e:
+            log.error("Error generating summary: %s", e)
 
     async def humanitix_summary(
         ctx: discord.interactions.Interaction,

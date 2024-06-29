@@ -429,15 +429,26 @@ class SummariserClient:
             )
 
         except DiscordException as e:
+            log.error(
+                "An error occurred while trying to run this command. Error is %s", e
+            )
             await ctx.followup.send(
-                f"An error occurred:\n```\n{e}\n```", ephemeral=True
+                "An error occurred while trying to run this command. Please open a #helpdesk ticket "
+                f"and describe the situation:\n```\n{e}\n```",
+                ephemeral=True,
             )
         except Exception as e:
+            log.error(
+                "An error occurred while trying to run this command. Error is %s (type: %s)",
+                e,
+                type(e),
+            )
             await ctx.followup.send(
                 "An error occurred while trying to run this command. Please open a #helpdesk ticket "
                 f"and describe the situation. Error is {e}",
                 ephemeral=True,
             )
+            raise e
 
     async def prepare_prompt(
         self, ctx: discord.Interaction, messages: List[ChatMessage]
