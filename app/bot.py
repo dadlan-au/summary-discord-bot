@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, time
 from pathlib import Path
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import discord
@@ -9,7 +8,8 @@ from channels.scanner import get_active_channels_and_threads, get_text_channel
 from config import AppSettings, get_config
 from discord import app_commands
 from discord.ext import tasks
-from discord.flags import Intents
+from discord.message import Message
+from discordbot import DiscordBotClient
 from dpn_pyutils.common import get_logger
 from humanitix.client import HumanitixClient
 from humanitix.summary import create_summary_from_event_data
@@ -19,28 +19,6 @@ from rendering.graphic import create_image_tix, create_text_tix
 log = get_logger(__name__)
 
 config = get_config()
-
-
-class DiscordBotClient(discord.Client):
-    """
-    Wrapper class for a Discord Bot to speed up command sync
-    """
-
-    tree: app_commands.CommandTree
-
-    moderator_channel: discord.TextChannel
-
-    def __init__(self, *, intents: Intents, **options: Any) -> None:
-        """
-        Initialize the bot and sync it to a specific guild, so that we don't have to
-        wait for commands to sync
-        """
-        super().__init__(intents=intents, **options)
-        self.tree = app_commands.CommandTree(self)
-
-    async def setup_hook(self):
-        self.tree.copy_global_to(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
-        await self.tree.sync(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
 
 
 async def raise_discord_error(ctx, e):
@@ -84,12 +62,22 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             client, config.DISCORD_POST_MESSAGE_CHANNEL
         )
 
+        await client.hydrate_summariser()
         log.debug(
             "Announcing to channel #%s (%s)", announce_channel.name, announce_channel.id
         )
         daily_channel_message_count.start()
+        cron_prune_summarizer.start()
 
-    # Function to run daily at a specific time
+    @tasks.loop(seconds=config.SUMMARISER_PRUNE_INTERVAL)
+    async def cron_prune_summarizer():
+        """
+        Runs a prune on the summarizer to ensure only relevant messages are stored
+        """
+
+        log.debug("Running prune on summarizer")
+        client.summariser.prune()
+
     @tasks.loop(time=run_at_time)
     async def daily_channel_message_count(announce_channel_id: int | None = None):
 
@@ -110,8 +98,6 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
         # Valid announcement channel exists, proceed with gathering data and rendering the announcement
         channels, threads = await get_active_channels_and_threads(client)
-        # channels = await get_active_channels(client)
-        # threads = await get_active_threads(client)
 
         log.debug(
             "Sending announcement to channel #%s (%s)",
@@ -142,7 +128,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
     # Command to inform when it will happen
     @client.event
-    async def on_message(message):
+    async def on_message(message: Message):
         if message.author == client.user:
             return
 
@@ -153,6 +139,24 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             except discord.errors.DiscordException as e:
                 await message.reply(f"An error occurred: {e}")
 
+        client.summariser.record_message(message.channel.id, message)
+
+    @client.event
+    async def on_message_edit(before: Message, after: Message):
+        """
+        Records a message edit
+        """
+
+        client.summariser.update_message(after.channel.id, after.id, after)
+
+    @client.event
+    async def on_message_delete(message: Message):
+        """
+        Records a message deletion
+        """
+
+        client.summariser.delete_message(message.channel.id, message.id)
+
     @client.tree.command(
         name="activity",
         description="Gets the activity summary for the day since the configured time",
@@ -161,7 +165,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         ctx: discord.interactions.Interaction,
     ):
         """
-        Gets the actvity summary for the day
+        Gets the activity summary for the day
         """
         try:
             await ctx.response.defer(ephemeral=True, thinking=True)
@@ -204,6 +208,15 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         """
         await humanitix_summary(ctx, subnet, "text")
 
+    @client.tree.command(
+        name="digest",
+        description="Generates a summary of the recent messages in this channel",
+    )
+    async def on_digest_channel(
+        ctx: discord.interactions.Interaction,
+    ):
+        await client.summariser.generate_summary(ctx)
+
     async def humanitix_summary(
         ctx: discord.interactions.Interaction,
         subnet: str | None = None,
@@ -241,7 +254,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             else:
                 image_path = create_image_tix(summary_data)
                 await ctx.followup.send(
-                    #"Here is the registrations summary",
+                    # "Here is the registrations summary",
                     ephemeral=False,
                     file=discord.File(image_path),
                 )

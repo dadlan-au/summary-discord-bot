@@ -23,6 +23,9 @@ matplotlib = "^3.9.0"
 pillow = "^10.3.0"
 selenium = "^4.21.0"
 webdriver-manager = "^4.0.1"
+openai = "^1.35.7"
+tiktoken = "^0.7.0"
+humanize = "^4.9.0"
 
 
 [build-system]
