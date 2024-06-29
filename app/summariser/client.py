@@ -283,6 +283,16 @@ class SummariserClient:
 
         if channel_id not in self.messages:
             await self.hydrate_messages_channel(channel)
+            if channel_id not in self.messages:
+                log.error(
+                    "It appears that the bot does not have access to the channel %s",
+                    channel_id,
+                )
+                raise ValueError(
+                    "No messages found in channel #%s (%s). Does the bot have access to that channel?",
+                    channel.name,
+                    channel.id,
+                )
 
         return self.messages[channel_id]
 
@@ -388,7 +398,6 @@ class SummariserClient:
                         f"{response.response}\n\n*(cached until {relative_time_string})*",
                     )
                     return
-
             messages = await self.get_messages(ctx.channel)  # type: ignore
             if not messages or len(messages) == 0:
                 await ctx.followup.send(
