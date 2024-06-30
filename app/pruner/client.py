@@ -96,6 +96,9 @@ class PrunerClient:
                 )
 
                 await mod_channel.send(embed=mod_notification)  # type: ignore
+            except discord.errors.DiscordServerError as e:
+                log.error("Discord server error: %s", e)
+                pass
 
     async def prune_channel(
         self,
