@@ -110,7 +110,7 @@ class PrunerClient:
         Prunes messages older than a certain threshold in a channel
         """
 
-        log.info(
+        log.debug(
             "Auto-pruning messages in channel #%s (%s) older than %s",
             channel.name,
             channel.id,  # type: ignore
