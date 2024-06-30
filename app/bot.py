@@ -69,6 +69,23 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         daily_channel_message_count.start()
         cron_prune_summarizer.start()
 
+        if config.PRUNER_ENABLE:
+            cron_pruner.start()
+
+    @tasks.loop(seconds=config.PRUNER_PRUNE_INTERVAL)
+    async def cron_pruner():
+        """
+        Runs the autoprune on the channels
+        """
+
+        log.debug("Running autoprune on channels")
+        guild = client.get_guild(config.DISCORD_BOT_GUILD_ID)
+        if guild is None:
+            log.error("Could not find guild with ID %s", config.DISCORD_BOT_GUILD_ID)
+            return
+
+        await client.pruner.prune(guild)
+
     @tasks.loop(seconds=config.SUMMARISER_PRUNE_INTERVAL)
     async def cron_prune_summarizer():
         """

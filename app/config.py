@@ -50,6 +50,11 @@ class AppSettings(BaseSettings):
     SUMMARISER_MESSAGE_AGE_THRESHOLD: int
     SUMMARISER_RESPONSE_CACHE_EXPIRY: int
     SUMMARISER_MOD_CHANNEL: int
+    PRUNER_ENABLE: bool
+    PRUNER_AUTOPRUNE_CHANNELS: List[str]
+    PRUNER_MESSAGE_AGE_THRESHOLD: int
+    PRUNER_PRUNE_INTERVAL: int
+    PRUNER_MOD_CHANNEL: int
 
 def get_config() -> AppSettings:
     """

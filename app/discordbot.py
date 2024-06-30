@@ -7,6 +7,7 @@ from config import get_config
 from discord import app_commands
 from discord.flags import Intents
 from dpn_pyutils.common import get_logger
+from pruner.client import PrunerClient
 from summariser.client import SummariserClient
 
 log = get_logger(__name__)
@@ -25,6 +26,8 @@ class DiscordBotClient(discord.Client):
 
     summariser: SummariserClient
 
+    pruner: PrunerClient
+
     def __init__(self, *, intents: Intents, **options: Any) -> None:
         """
         Initialize the bot and sync it to a specific guild, so that we don't have to
@@ -33,6 +36,7 @@ class DiscordBotClient(discord.Client):
         super().__init__(intents=intents, **options)
         self.tree = app_commands.CommandTree(self)
         self.summariser = SummariserClient()
+        self.pruner = PrunerClient()
 
     async def setup_hook(self):
         self.tree.copy_global_to(guild=discord.Object(id=config.DISCORD_BOT_GUILD_ID))
