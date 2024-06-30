@@ -64,15 +64,16 @@ class PrunerClient:
                     threshold_time_string = message_threshold.strftime(
                         "%Y-%m-%d %H:%M:%S"
                     )
-                    mod_notification = discord.Embed(
-                        title=f"Auto Prune summary for #{channel.name} ({channel.id})",
-                        description=(
-                            f"Pruned {messages_pruned} messages older than {relative_time_string} ( {threshold_time_string} UTC ) "
-                            f"from channel #{channel.jump_url}"
-                        ),
-                    )
+                    if messages_pruned > 0:
+                        mod_notification = discord.Embed(
+                            title=f"Auto Prune summary for #{channel.name} ({channel.id})",
+                            description=(
+                                f"Pruned {messages_pruned} messages older than {relative_time_string} ( {threshold_time_string} UTC ) "
+                                f"from channel #{channel.jump_url}"
+                            ),
+                        )
 
-                    await mod_channel.send(embed=mod_notification)  # type: ignore
+                        await mod_channel.send(embed=mod_notification)  # type: ignore
                 else:
                     log.warn(
                         "Channel #%s (%s) is not a message-based channel, skipping pruning",
