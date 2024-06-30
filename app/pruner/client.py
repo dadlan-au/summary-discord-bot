@@ -16,7 +16,9 @@ class PrunerClient:
 
     message_threshold_offset: int
 
-    autopruned_channels: List[str]
+    autopruned_channels: List[int]
+
+    ignored_messages: List[int]
 
     def __init__(self):
         """
@@ -25,6 +27,7 @@ class PrunerClient:
 
         self.message_threshold_offset = config.PRUNER_MESSAGE_AGE_THRESHOLD
         self.autopruned_channels = config.PRUNER_AUTOPRUNE_CHANNELS
+        self.ignored_messages = config.PRUNER_IGNORE_MESSAGES
 
     async def prune(self, guild: discord.Guild):
         """
@@ -43,7 +46,7 @@ class PrunerClient:
             )
 
         for channel_id in self.autopruned_channels:
-            channel = guild.get_channel(int(channel_id))
+            channel = guild.get_channel(channel_id)
             if channel is None:
                 log.warn("Could not find channel with ID %s", channel_id)
                 continue
@@ -119,6 +122,15 @@ class PrunerClient:
             discord.ChannelType.public_thread,
         ]:
             async for message in channel.history(limit=None, before=message_threshold):  # type: ignore
+                if message.id in self.ignored_messages:
+                    log.debug(
+                        "Skipping ignored message #%s at %s by %s",
+                        message.id,
+                        message.created_at,
+                        message.author,
+                    )
+                    continue
+
                 log.info(
                     "Pruning message #%s at %s by %s",
                     message.id,
@@ -133,6 +145,15 @@ class PrunerClient:
                 async for message in thread.history(
                     limit=None, before=message_threshold
                 ):
+                    if message.id in self.ignored_messages:
+                        log.debug(
+                            "Skipping ignored message #%s at %s by %s",
+                            message.id,
+                            message.created_at,
+                            message.author,
+                        )
+                        continue
+
                     log.info(
                         "Pruning message #%s at %s by %s",
                         message.id,
