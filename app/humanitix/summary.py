@@ -54,7 +54,7 @@ async def create_summary_from_event_data(events: List[Event]):
 
         summary_data.append(summary_event)
 
-    summary_data.sort(key=lambda x: x["name"], reverse=False)
+    summary_data.sort(key=lambda x: x["orders"], reverse=True)
 
     return {
         "events": summary_data,
