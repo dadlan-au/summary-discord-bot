@@ -239,6 +239,16 @@ class SummariserClient:
             if m.id == discord_message.id:
                 return
 
+        if (
+            discord_message.application_id is not None
+            and config.SUMMARISER_IGNORE_APPLICATION_MESSAGES
+        ):
+            log.debug(
+                "Ignoring message from application id %s",
+                discord_message.application_id,
+            )
+            return
+
         self.messages[channel].append(
             ChatMessage(
                 id=discord_message.id,
