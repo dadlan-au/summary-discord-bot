@@ -51,6 +51,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
     # Declare intents
     intents = discord.Intents.default()
+    intents.messages = True
     intents.message_content = True
     client = DiscordBotClient(intents=intents)
 
@@ -163,7 +164,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         """
         Records a message edit
         """
-
+        log.debug("Message edited: %s", after.content)
         client.summariser.update_message(after.channel.id, after.id, after)
 
     @client.event

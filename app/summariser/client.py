@@ -516,7 +516,6 @@ class SummariserClient:
         )
 
         log.debug("Prefix, suffix, and generated token cost is %s", prompt_token_cost)
-
         if prompt_token_cost > config.OPENAI_MODEL_CONTEXT_WINDOW:
             await ctx.followup.send(
                 "The prefix and suffix prompts are too long to summarize, please raise a #helpdesk ticket "
@@ -560,6 +559,8 @@ class SummariserClient:
         prompt.extend(reversed(prompt_user_messages))
 
         prompt.append(suffix_prompt)
+
+        log.debug(prompt)
 
         return prompt, prompt_token_cost
 
