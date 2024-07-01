@@ -28,6 +28,10 @@ log = get_logger(__name__)
 config = get_config()
 
 
+class NoMessagesFoundError(Exception):
+    pass
+
+
 class SummariserClient:
 
     client: ChatGPTClient
@@ -288,7 +292,7 @@ class SummariserClient:
                     "It appears that the bot does not have access to the channel %s",
                     channel_id,
                 )
-                raise ValueError(
+                raise NoMessagesFoundError(
                     f"No messages found in channel #{channel.name} ({channel.name}). "
                     "Does the bot have access to that channel or are messages older than the threshold?",
                 )
@@ -444,6 +448,11 @@ class SummariserClient:
             await ctx.followup.send(
                 "An error occurred while trying to run this command. Please open a #helpdesk ticket "
                 f"and describe the situation:\n```\n{e}\n```",
+                ephemeral=True,
+            )
+        except NoMessagesFoundError:
+            await ctx.followup.send(
+                "Whoops! It looks like there are no new messages for summarisation in this channel.",
                 ephemeral=True,
             )
         except Exception as e:
