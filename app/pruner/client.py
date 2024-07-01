@@ -69,7 +69,7 @@ class PrunerClient:
                             title=f"Auto Prune summary for #{channel.name} ({channel.id})",
                             description=(
                                 f"Pruned {messages_pruned} messages older than {relative_time_string} ( {threshold_time_string} UTC ) "
-                                f"from channel #{channel.jump_url}"
+                                f"from channel {channel.jump_url}"
                             ),
                         )
 
