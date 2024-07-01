@@ -508,6 +508,10 @@ class SummariserClient:
 
         prompt = [prefix_prompt]
 
+        prompt_user_messages = []
+
+        # We need to sort the messages to get the most recent messages first
+        messages = sorted(messages, key=lambda x: x.created_at, reverse=True)
         for message in messages:
             prompt_entry = {
                 "role": "user",
@@ -529,8 +533,12 @@ class SummariserClient:
                 )
                 break
 
-            prompt.append(prompt_entry)
+            prompt_user_messages.append(prompt_entry)
             prompt_token_cost += estimated_token_cost
+
+        # Reverse the prompt user messages so that the earlier messages are first and the
+        # summarization is done chronologically
+        prompt.extend(reversed(prompt_user_messages))
 
         prompt.append(suffix_prompt)
 
