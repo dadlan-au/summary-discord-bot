@@ -289,9 +289,8 @@ class SummariserClient:
                     channel_id,
                 )
                 raise ValueError(
-                    "No messages found in channel #%s (%s). Does the bot have access to that channel?",
-                    channel.name,
-                    channel.id,
+                    f"No messages found in channel #{channel.name} ({channel.name}). "
+                    "Does the bot have access to that channel or are messages older than the threshold?",
                 )
 
         return self.messages[channel_id]
@@ -371,13 +370,13 @@ class SummariserClient:
                 if m.created_at > message_age_threshold_dt
             ]
 
-    async def generate_summary(self, ctx: Interaction):
+    async def generate_summary(self, ctx: Interaction, public: bool):
         """
         Generates a summary based on an interaction request
         """
 
         log.debug("Received interaction from %s", ctx.user.name)
-        await ctx.response.defer(ephemeral=False, thinking=True)
+        await ctx.response.defer(ephemeral=(not public), thinking=True)
 
         try:
             channel_id = ctx.channel_id
@@ -396,6 +395,7 @@ class SummariserClient:
                     await self.send_response(
                         ctx,
                         f"{response.response}\n\n*(cached until {relative_time_string})*",
+                        public=public,
                     )
                     return
             messages = await self.get_messages(ctx.channel)  # type: ignore
@@ -428,7 +428,7 @@ class SummariserClient:
 
             await self.send_mod_notification(ctx, result)
 
-            await self.send_response(ctx, result.response)
+            await self.send_response(ctx, result.response, public=public)
 
             # Cache the response for a period of time
             self.response_cache[channel_id] = ChannelCacheResponse(
@@ -580,7 +580,9 @@ class SummariserClient:
 
         await mod_channel.send(embed=mod_notification)  # type: ignore
 
-    async def send_response(self, ctx: discord.Interaction, response: str):
+    async def send_response(
+        self, ctx: discord.Interaction, response: str, public: bool
+    ):
         """
         Formats a response string into the correct number of messages
         """
@@ -590,6 +592,6 @@ class SummariserClient:
                 response, config.DISCORD_MAX_MESSAGE_LENGTH
             )
             for m in messages:
-                await ctx.followup.send(m, ephemeral=False)
+                await ctx.followup.send(m, ephemeral=(not public))
         else:
-            await ctx.followup.send(response, ephemeral=False)
+            await ctx.followup.send(response, ephemeral=(not public))

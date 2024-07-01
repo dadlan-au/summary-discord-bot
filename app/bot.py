@@ -227,13 +227,17 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
     @client.tree.command(
         name="digest",
-        description="Generates a summary of the recent messages in this channel",
+        description="Generates a summary of the recent messages in this channel (up to 24h)",
+    )
+    @app_commands.describe(
+        public="If True, the summary will be posted in the channel. If blank or False, it will be sent only to you"
     )
     async def on_digest_channel(
         ctx: discord.interactions.Interaction,
+        public: bool = False,
     ):
         try:
-            await client.summariser.generate_summary(ctx)
+            await client.summariser.generate_summary(ctx, public)
         except Exception as e:
             log.error("Error generating summary: %s", e)
 
