@@ -277,8 +277,6 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
 
             summary_data = await apply_maxhealth_info(summary_data)
 
-            log.debug("Summary data: %s", summary_data)
-
             if format.lower() == "text":
                 formatted_message = create_text_tix(summary_data)
                 await ctx.followup.send(formatted_message, ephemeral=False)

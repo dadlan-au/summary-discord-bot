@@ -36,6 +36,11 @@
             scrollbar-width: none;
         }
 
+        .zero-value {
+            color: rgb(160, 160, 160);
+            font-weight: 300;
+        }
+
         .table-wrapper {
             display: flex;
             justify-content: space-between;
@@ -120,7 +125,7 @@
         }
     </style>
     <body>
-        {% set split_point = events | length if events | length < 8 else 8 %}
+        {% set split_point = events | length if events | length < 6 else 6 %}
         <div class="table-wrapper table-wrapper-body">
             <div class="table-container-auto-resize table-container">
                 <table id="data-table-left-col">
@@ -140,9 +145,9 @@
                     <tbody>{% for event in events[:split_point] %}
                         <tr>
                             <td>{{ event.name | safe }}</td>
-                            <td>{{ event.orders }}</td>
-                            <td>{{ event.spares_needed }}</td>
-                            <td>{{ event.maxhealth }} </td>
+                            <td {% if event.orders == 0 %}class="zero-value"{% endif %}>{{ event.orders }}</td>
+                            <td {% if event.spares_needed == 0 %}class="zero-value"{% endif %}>{{ event.spares_needed }}</td>
+                            <td {% if event.maxhealth == 0 %}class="zero-value"{% endif %}>{{ event.maxhealth }} </td>
                         </tr>{% endfor %}
                     </tbody>
                 </table>
@@ -165,9 +170,9 @@
                     <tbody>{% for event in events[split_point:] %}
                         <tr>
                             <td>{{ event.name | safe }}</td>
-                            <td>{{ event.orders }}</td>
-                            <td>{{ event.spares_needed }}</td>
-                            <td>{{ event.maxhealth }} </td>
+                            <td {% if event.orders == 0 %}class="zero-value"{% endif %}>{{ event.orders }}</td>
+                            <td {% if event.spares_needed == 0 %}class="zero-value"{% endif %}>{{ event.spares_needed }}</td>
+                            <td {% if event.maxhealth == 0 %}class="zero-value"{% endif %}>{{ event.maxhealth }} </td>
                         </tr>{% endfor %}
                     </tbody>
                 </table>
