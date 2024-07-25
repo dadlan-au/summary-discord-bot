@@ -453,7 +453,9 @@ class SummariserClient:
 
         except DiscordException as e:
             log.error(
-                "An error occurred while trying to run this command. Error is %s", e
+                "An error occurred while trying to run this command. Error is %s",
+                e,
+                exc_info=True,
             )
             await ctx.followup.send(
                 "An error occurred while trying to run this command. Please open a #helpdesk ticket "
@@ -470,6 +472,7 @@ class SummariserClient:
                 "An error occurred while trying to run this command. Error is %s (type: %s)",
                 e,
                 type(e),
+                exc_info=True,
             )
             await ctx.followup.send(
                 "An error occurred while trying to run this command. Please open a #helpdesk ticket "
@@ -594,7 +597,9 @@ class SummariserClient:
                 f"All users = `US ${all_users_cost:0.6f}`\n"
                 f"All channels = `US ${all_channels_cost:0.6f}`\n"
                 f"{ctx.channel.jump_url} channel cost = `US ${current_channel_cost:0.6f}`\n"  # type: ignore
-                f"{ctx.user.display_name} user cost = `US ${current_user_cost}`"
+                f"{ctx.user.display_name} user cost = `US ${current_user_cost}`\n"
+                f"### Generated Text\n"
+                f"{result.response}"
             ),
         )
 
