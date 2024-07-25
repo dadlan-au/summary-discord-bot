@@ -1,8 +1,11 @@
 from typing import Any, Dict, List
 
 from config import get_config
+from dpn_pyutils.common import get_logger
 from humanitix.client import HumanitixClient
 from humanitix.models import Event, Tickets
+
+log = get_logger(__name__)
 
 config = get_config()
 
@@ -14,13 +17,12 @@ async def create_summary_from_event_data(events: List[Event]):
 
     summary_data = []
     for e in events:
-
         client = HumanitixClient()
         tickets = Tickets.model_validate(await client.get_event_tickets(e.id)).tickets
 
         event_name = str(e.name)
-        try: # if the event name is not in the expected format
-            event_name = '&nbsp;'.join(event_name.split(" ")[1:-2])
+        try:  # if the event name is not in the expected format
+            event_name = "&nbsp;".join(event_name.split(" ")[1:-2])
         except IndexError:
             if config.RENDER_TIX_REPLACE_WORD_FROM_NAME != "":
                 event_name = event_name.replace(
@@ -32,6 +34,8 @@ async def create_summary_from_event_data(events: List[Event]):
             "name": event_name,
             "slug": e.slug,
             "orders": len(tickets),
+            "public": e.public,
+            "published": e.published,
         }
 
         e.sparesNeeded = 0

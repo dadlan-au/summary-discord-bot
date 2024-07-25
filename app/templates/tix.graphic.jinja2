@@ -77,12 +77,13 @@
         }
 
         th:nth-child(2),
-        td:nth-child(2) {
-            text-align: center;
-        }
+        td:nth-child(2),
         th:nth-child(3),
-        td:nth-child(3) {
+        td:nth-child(3),
+        th:nth-child(4),
+        td:nth-child(4) {
             text-align: center;
+            min-width: 2em;
         }
         th {
             font-size: calc(1vw + 2vh);
@@ -93,6 +94,7 @@
         tr.totals-row td {
             font-size: calc(1vw + 3vh);
             font-weight: 600;
+            min-width: 25%;
         }
 
         tr.totals-row {
@@ -118,7 +120,7 @@
         }
     </style>
     <body>
-        {% set split_point = events | length if events | length < 12 else 12 %}
+        {% set split_point = events | length if events | length < 8 else 8 %}
         <div class="table-wrapper table-wrapper-body">
             <div class="table-container-auto-resize table-container">
                 <table id="data-table-left-col">
@@ -132,6 +134,7 @@
                             <th>SUBNET</th>
                             <th>&#127903;</th>
                             <th>&#128187;</th>
+                            <th>&#9728;</th>
                         </tr>
                     </thead>
                     <tbody>{% for event in events[:split_point] %}
@@ -139,6 +142,7 @@
                             <td>{{ event.name | safe }}</td>
                             <td>{{ event.orders }}</td>
                             <td>{{ event.spares_needed }}</td>
+                            <td>{{ event.maxhealth }} </td>
                         </tr>{% endfor %}
                     </tbody>
                 </table>
@@ -155,6 +159,7 @@
                             <th>SUBNET</th>
                             <th>&#127903;</th>
                             <th>&#128187;</th>
+                            <th>&#9728;</th>
                         </tr>
                     </thead>
                     <tbody>{% for event in events[split_point:] %}
@@ -162,6 +167,7 @@
                             <td>{{ event.name | safe }}</td>
                             <td>{{ event.orders }}</td>
                             <td>{{ event.spares_needed }}</td>
+                            <td>{{ event.maxhealth }} </td>
                         </tr>{% endfor %}
                     </tbody>
                 </table>
@@ -174,6 +180,7 @@
                         <td>TOTAL</td>
                         <td>&#127903; {{ total_orders }}</td>
                         <td>&#128187; {{ total_spares_needed }}</td>
+                        <td>&#9728; {{ total_maxhealth }}</td>
                     </tr>
                 </table>
             </div>
@@ -181,8 +188,8 @@
         <script>
             function adjustFontSize() {
                 const tableContainers = document.querySelectorAll(".table-container-auto-resize");
-                let initialFontSize = 60;
-                let fontSize = 60;
+                let initialFontSize = 38;
+                let fontSize = initialFontSize;
                 tableContainers.forEach((container) => {
                     const table = container.querySelector("table");
                     table.style.fontSize = `${fontSize}px`;

@@ -12,6 +12,7 @@ from discord.message import Message
 from discordbot import DiscordBotClient
 from dpn_pyutils.common import get_logger
 from humanitix.client import HumanitixClient
+from humanitix.maxhealth import apply_maxhealth_info
 from humanitix.summary import create_summary_from_event_data
 from render import render_template, split_rendered_text_max_length
 from rendering.graphic import create_image_tix, create_text_tix
@@ -273,6 +274,11 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
                 return
 
             summary_data = await create_summary_from_event_data(events)
+
+            summary_data = await apply_maxhealth_info(summary_data)
+
+            log.debug("Summary data: %s", summary_data)
+
             if format.lower() == "text":
                 formatted_message = create_text_tix(summary_data)
                 await ctx.followup.send(formatted_message, ephemeral=False)

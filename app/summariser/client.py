@@ -408,7 +408,7 @@ class SummariserClient:
                     relative_time_string = humanize.naturaltime(response.expires_at)
                     await self.send_response(
                         ctx,
-                        f"{response.response}\n\n*(cached until {relative_time_string})*",
+                        f"{response.response}\n\n*(cached for {relative_time_string})*",
                         public=public,
                     )
                     return

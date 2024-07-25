@@ -2,10 +2,9 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import httpx
-
+from config import get_config
 from humanitix.models import Event, Events
 from humanitix.utils import get_kwargs_as_query_string
-from config import get_config
 
 config = get_config()
 
@@ -130,19 +129,27 @@ class HumanitixClient:
         return await self.make_api_call("GET", f"events/{event_id}/tickets/{ticket_id}")
 
     async def filter_events_by_name(
-        self, event_name_fragment: str | None
+        self, event_name_fragment: str | None, only_live_events: bool = True
     ) -> List[Event] | None:
         """
         Filters events by the supplied name fragment
         """
 
         events = Events.model_validate(await self.get_events())
-        if event_name_fragment is None:
+        if event_name_fragment is None and only_live_events is False:
             return events.events
+        elif event_name_fragment is None:
+            return [
+                event for event in events.events if event.published and event.public
+            ]
 
         filtered_events = []
         for event in events.events:
-            if event_name_fragment in event.name or event_name_fragment in event.slug:
+            if (
+                event_name_fragment in event.name
+                or event_name_fragment in event.slug
+                and (event.published and event.public)
+            ):
                 filtered_events.append(event)
 
         return filtered_events if filtered_events else None

@@ -1,7 +1,7 @@
 # Ticket Summary
 {% for event in events %}**{{ event.name }}**
-:tickets: - {{ event.orders }}    |    :computer: - {{ event.spares_needed }}
+:tickets: - {{ event.orders }}    |    :computer: - {{ event.spares_needed }}    |    :sunny: {{ event.maxhealth }}
 
 {% endfor %}
 **TOTALS:**
-:tickets: - {{ total_orders }}    |    :computer: - {{ total_spares_needed }}
+:tickets: - {{ total_orders }}    |    :computer: - {{ total_spares_needed }}    |    :sunny: {{ total_maxhealth }}
