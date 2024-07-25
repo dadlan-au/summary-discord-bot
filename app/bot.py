@@ -285,7 +285,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
                 )
                 image_path.unlink()
 
-        except discord.errors.DiscordException as e:
+        except (discord.errors.DiscordException, OSError) as e:
             await raise_discord_error(ctx, e)
 
     return client

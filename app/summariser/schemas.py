@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import List
 
 from pydantic import BaseModel
@@ -53,3 +54,20 @@ class ChannelCacheResponse(BaseModel):
 
     response: str
     expires_at: datetime
+
+class GenerationSnapshotSchema(BaseModel):
+    """
+    Schema for the generation snapshot called by end users
+    """
+
+    timestamp_at: datetime
+    channel: str
+    channel_id: int
+    name: str
+    display_name: str
+    user_id: int
+    prompt: str
+    response: str
+    estimated_tokens: int
+    actual_tokens: int
+    estimated_cost: Decimal
