@@ -476,7 +476,7 @@ class SummariserClient:
             )
             await ctx.followup.send(
                 "An error occurred while trying to run this command. Please open a #helpdesk ticket "
-                f"and describe the situation. Error is {e}",
+                f"and describe the situation. Error is \n```\n{e}\n```",
                 ephemeral=True,
             )
             raise e
@@ -597,13 +597,16 @@ class SummariserClient:
                 f"All users = `US ${all_users_cost:0.6f}`\n"
                 f"All channels = `US ${all_channels_cost:0.6f}`\n"
                 f"{ctx.channel.jump_url} channel cost = `US ${current_channel_cost:0.6f}`\n"  # type: ignore
-                f"{ctx.user.display_name} user cost = `US ${current_user_cost}`\n"
-                f"### Generated Text\n"
-                f"{result.response}"
+                f"{ctx.user.display_name} user cost = `US ${current_user_cost}`"
             ),
+        )
+        mod_response_notification = discord.Embed(
+            title=f"Genenerated Response for {ctx.user.display_name} ({ctx.user.name})",
+            description=("### Generated Text\n" f"{result.response}"),
         )
 
         await mod_channel.send(embed=mod_notification)  # type: ignore
+        await mod_channel.send(embed=mod_response_notification)  # type: ignore
 
     async def send_response(
         self, ctx: discord.Interaction, response: str, public: bool
