@@ -615,11 +615,28 @@ class SummariserClient:
         Formats a response string into the correct number of messages
         """
 
-        if len(response) > config.DISCORD_MAX_MESSAGE_LENGTH:
+        if len(response) > config.DISCORD_MAX_EMBED_LENGTH:
             messages = split_rendered_text_max_length(
-                response, config.DISCORD_MAX_MESSAGE_LENGTH
+                response, config.DISCORD_MAX_EMBED_LENGTH
             )
-            for m in messages:
-                await ctx.followup.send(m, ephemeral=(not public))
+            for idx, m in enumerate(messages):
+                if idx == 0:
+                    message_embed = discord.Embed(
+                        title=f"Summary for {ctx.user.display_name}",
+                        description=m,
+                    )
+                else:
+                    message_embed = discord.Embed(description=m)
+
+                await ctx.followup.send(
+                    embed=message_embed,
+                    ephemeral=(not public),
+                )
         else:
-            await ctx.followup.send(response, ephemeral=(not public))
+            await ctx.followup.send(
+                embed=discord.Embed(
+                    title=f"Summary for {ctx.user.display_name}",
+                    description=response,
+                ),
+                ephemeral=(not public),
+            )
