@@ -125,7 +125,7 @@
         }
     </style>
     <body>
-        {% set split_point = events | length if events | length < 6 else 6 %}
+        {% set split_point = (events | length + 1) // 2 %}
         <div class="table-wrapper table-wrapper-body">
             <div class="table-container-auto-resize table-container">
                 <table id="data-table-left-col">
