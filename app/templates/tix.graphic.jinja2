@@ -123,9 +123,33 @@
         tbody tr:nth-child(even) {
             background-color: rgba(255, 255, 255, 0.18);
         }
+        .max-health-logo {
+            background-image: url(./maxhealth.png);
+            background-size: 38px 38px;
+            background-repeat: no-repeat;
+            background-position: top 2px center;
+            width: 76px;
+            height: 40px;
+            position: relative;
+        }
+        .totals-row .max-health-logo {
+            background-position: top 2px left 0px;
+            background-size: 47px 47px;
+            height: 50px;
+            width: 54px;
+        }
+        .totals-row-max-health-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .totals-row-max-health-text {
+            margin-left: 5px;
+        }
     </style>
     <body>
-        {% set split_point = (events | length + 1) // 2 %}
+        {% set rendered_events = events[:24] %}
+        {% set split_point = (rendered_events | length + 1) // 2 %}
         <div class="table-wrapper table-wrapper-body">
             <div class="table-container-auto-resize table-container">
                 <table id="data-table-left-col">
@@ -139,15 +163,29 @@
                             <th>SUBNET</th>
                             <th>&#127903;</th>
                             <th>&#128187;</th>
-                            <th>&#9728;</th>
+                            <th>
+                                <div class="max-health-logo"></div>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>{% for event in events[:split_point] %}
+                    <tbody>{% for event in rendered_events[:split_point] %}
                         <tr>
                             <td>{{ event.name | safe }}</td>
-                            <td {% if event.orders == 0 %}class="zero-value"{% endif %}>{{ event.orders }}</td>
-                            <td {% if event.spares_needed == 0 %}class="zero-value"{% endif %}>{{ event.spares_needed }}</td>
-                            <td {% if event.maxhealth == 0 %}class="zero-value"{% endif %}>{{ event.maxhealth }} </td>
+                            {% if event.orders == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.orders }}</td>
+                            {% endif %}
+                            {% if event.spares_needed == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.spares_needed }}</td>
+                            {% endif %}
+                            {% if event.maxhealth == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.maxhealth }}</td>
+                            {% endif %}
                         </tr>{% endfor %}
                     </tbody>
                 </table>
@@ -164,15 +202,27 @@
                             <th>SUBNET</th>
                             <th>&#127903;</th>
                             <th>&#128187;</th>
-                            <th>&#9728;</th>
+                            <th><div class="max-health-logo"></div></th>
                         </tr>
                     </thead>
-                    <tbody>{% for event in events[split_point:] %}
+                    <tbody>{% for event in rendered_events[split_point:] %}
                         <tr>
                             <td>{{ event.name | safe }}</td>
-                            <td {% if event.orders == 0 %}class="zero-value"{% endif %}>{{ event.orders }}</td>
-                            <td {% if event.spares_needed == 0 %}class="zero-value"{% endif %}>{{ event.spares_needed }}</td>
-                            <td {% if event.maxhealth == 0 %}class="zero-value"{% endif %}>{{ event.maxhealth }} </td>
+                            {% if event.orders == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.orders }}</td>
+                            {% endif %}
+                            {% if event.spares_needed == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.spares_needed }}</td>
+                            {% endif %}
+                            {% if event.maxhealth == 0 %}
+                            <td class="zero-value">-</td>
+                            {% else %}
+                            <td>{{ event.maxhealth }}</td>
+                            {% endif %}
                         </tr>{% endfor %}
                     </tbody>
                 </table>
@@ -185,7 +235,12 @@
                         <td>TOTAL</td>
                         <td>&#127903; {{ total_orders }}</td>
                         <td>&#128187; {{ total_spares_needed }}</td>
-                        <td>&#9728; {{ total_maxhealth }}</td>
+                        <td>
+                            <div class="totals-row-max-health-wrapper">
+                                <div class="max-health-logo"></div>
+                                <div class="totals-row-max-health-text">{{ total_maxhealth }}</div>
+                            </div>
+                        </td>
                     </tr>
                 </table>
             </div>
