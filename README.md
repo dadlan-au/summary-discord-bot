@@ -7,8 +7,8 @@ Set up a development environment by [installing Poetry](https://python-poetry.or
 Set up a python virtualenv or use a devcontainer
 
 ```bash
-python -m venv /venv
-source /venv/bin/activate && \
+python -m venv ./venv && \
+    source ./venv/bin/activate && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi && \
     cp .env.sample .env
