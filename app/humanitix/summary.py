@@ -61,6 +61,10 @@ async def create_summary_from_event_data(events: List[Event]):
 
         summary_data.append(summary_event)
 
+    # Sorting first by name for entries with orders equal to zero
+    summary_data.sort(key=lambda x: (x["orders"] == 0, x["name"] if x["orders"] == 0 else ''), reverse=False)
+
+    # Sorting again by orders in reverse order, keeping the alphabetical order for entries with zero orders intact
     summary_data.sort(key=lambda x: x["orders"], reverse=True)
 
     return {
