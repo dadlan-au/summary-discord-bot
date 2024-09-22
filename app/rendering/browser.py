@@ -1,7 +1,12 @@
+import io
+import time
 from pathlib import Path
+from typing import List
 
 from config import get_config
-from selenium import webdriver
+from dpn_pyutils.common import get_logger
+from PIL import Image
+from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
@@ -11,10 +16,12 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 config = get_config()
 
+log = get_logger(__name__)
 
-def generate_screenshot_file(source_file: Path, screenshot_path: Path):
+
+def get_chromedriver_options() -> Options:
     """
-    Creates a table image based on the subnet columns
+    Gets a set of chromedriver options
     """
 
     options = Options()
@@ -26,14 +33,35 @@ def generate_screenshot_file(source_file: Path, screenshot_path: Path):
         f"--window-size={config.RENDER_TIX_SCREEN_WIDTH},{config.RENDER_TIX_SCREEN_HEIGHT}"
     )
 
-    driver = webdriver.Chrome(
-        service=ChromeService(
-            ChromeDriverManager(
-                driver_version=config.RENDER_TIX_CHROMEDRIVER_VERSION
-            ).install()
-        ),
-        options=options,
+    return options
+
+
+def get_chromedriver_service() -> ChromeService:
+    """
+    Gets a chromedriver service
+    """
+
+    return ChromeService(
+        ChromeDriverManager(
+            driver_version=config.RENDER_TIX_CHROMEDRIVER_VERSION
+        ).install()
     )
+
+
+def get_chromedriver(options: Options, service: ChromeService) -> Chrome:
+    """
+    Gets a chromedriver
+    """
+
+    return Chrome(service=service, options=options)
+
+
+def generate_screenshot_file(source_file: Path, screenshot_path: Path):
+    """
+    Creates a table image based on the subnet columns
+    """
+
+    driver = get_chromedriver(get_chromedriver_options(), get_chromedriver_service())
 
     driver.get(f"file://{source_file.absolute()}")
 
@@ -43,3 +71,46 @@ def generate_screenshot_file(source_file: Path, screenshot_path: Path):
     driver.save_screenshot(screenshot_path)
 
     driver.quit()
+
+
+def generate_screenshot_animation_key_frames(
+    source_file: Path, num_pages: int
+) -> List[bytes]:
+    """ """
+    driver = get_chromedriver(get_chromedriver_options(), get_chromedriver_service())
+
+    driver.get(f"file://{source_file.absolute()}")
+
+    element_present = EC.presence_of_element_located((By.TAG_NAME, "body"))
+    WebDriverWait(driver, config.RENDER_TIX_WAIT_TIMEOUT).until(element_present)
+
+    images = []
+    for i in range(num_pages):
+        driver.execute_script(f"showPage({i})")
+        time.sleep(0.1)
+        images.append(driver.get_screenshot_as_png())
+
+    return images
+
+
+def generate_screenshot_animation(
+    source_file: Path, screenshot_file: Path, num_pages: int
+):
+    """
+
+    Creates an animated, scrolling table image based on the subnet columns
+    """
+
+    images = generate_screenshot_animation_key_frames(source_file, num_pages)
+
+    encoded_images = []
+    for image in images:
+        encoded_images.append(Image.open(io.BytesIO(image)))
+
+    encoded_images[0].save(
+        screenshot_file.absolute(),
+        save_all=True,
+        append_images=encoded_images[1:],
+        loop=0,
+        duration=config.RENDER_TIX_DELAY_INTERVAL_MS,
+    )

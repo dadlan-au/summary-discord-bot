@@ -136,6 +136,7 @@ class HumanitixClient:
         """
 
         events = Events.model_validate(await self.get_events())
+
         if event_name_fragment is None and only_live_events is False:
             return events.events
         elif event_name_fragment is None:
@@ -146,8 +147,8 @@ class HumanitixClient:
         filtered_events = []
         for event in events.events:
             if (
-                event_name_fragment in event.name
-                or event_name_fragment in event.slug
+                event_name_fragment.lower() in event.name.lower()
+                or event_name_fragment.lower() in event.slug.lower()
                 and (event.published and event.public)
             ):
                 filtered_events.append(event)

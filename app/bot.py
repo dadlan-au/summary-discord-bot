@@ -1,3 +1,4 @@
+import io
 import uuid
 from datetime import datetime, time
 from pathlib import Path
@@ -15,7 +16,11 @@ from humanitix.client import HumanitixClient
 from humanitix.maxhealth import apply_maxhealth_info
 from humanitix.summary import create_summary_from_event_data
 from render import render_template, split_rendered_text_max_length
-from rendering.graphic import create_image_tix, create_text_tix
+from rendering.graphic import (
+    create_image_tix_animated,
+    create_image_tix_static_images,
+    create_text_tix,
+)
 
 log = get_logger(__name__)
 
@@ -199,7 +204,7 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
     )
     @app_commands.describe(
         subnet="The name (or part) of the subnet to find",
-        format="The output method, valid options are 'image' or 'text'",
+        format="The output method, valid options are 'image' or 'static'",
     )
     async def on_humanitix_graphics(
         ctx: discord.interactions.Interaction,
@@ -256,9 +261,9 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             log.debug("Received interaction from %s", ctx.user.name)
             await ctx.response.defer(ephemeral=False, thinking=True)
 
-            if format is not None and format.lower() not in ["image", "text"]:
+            if format is not None and format.lower() not in ["image", "text", "static"]:
                 await ctx.followup.send(
-                    "Invalid format specified. Please use either 'image' or 'text'",
+                    "Invalid format specified. Please use either 'image' or 'text' or 'static'",
                     ephemeral=True,
                 )
                 return
@@ -280,10 +285,17 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             if format.lower() == "text":
                 formatted_message = create_text_tix(summary_data)
                 await ctx.followup.send(formatted_message, ephemeral=False)
+            elif format.lower() == "static":
+                raw_images = create_image_tix_static_images(summary_data)
+                discord_images = [
+                    discord.File(io.BytesIO(i), filename=f"image_{idx}.png")
+                    for idx, i in enumerate(raw_images)
+                ]
+                await ctx.followup.send(ephemeral=False, files=discord_images)
+
             else:
-                image_path = create_image_tix(summary_data)
+                image_path = create_image_tix_animated(summary_data)
                 await ctx.followup.send(
-                    # "Here is the registrations summary",
                     ephemeral=False,
                     file=discord.File(image_path),
                 )

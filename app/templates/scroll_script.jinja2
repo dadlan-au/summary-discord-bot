@@ -1,0 +1,23 @@
+var scrollable = document.querySelector("{{ scrollable_selector }}");
+if(null === scrollable || undefined === scrollable) {
+    alert(`Scrollable element '${scrollable_selector}' not found`);
+    throw new Error(`Scrollable element '${scrollable_selector}' not found`);
+}
+
+var maxScroll = scrollable.scrollHeight - scrollable.clientHeight;
+var scrollToEnd = true;
+var currentPage = 0;
+function smoothScroll() {
+    if (scrollable.scrollTop >= maxScroll && scrollToEnd) {
+        scrollToEnd = false;
+    }
+    if (scrollable.scrollTop <= 0 && !scrollToEnd) {
+        scrollToEnd = true;
+    }
+
+    var scrollStepSize = scrollable.scrollHeight / (scrollable.scrollHeight * {{ step_size }});
+
+    scrollable.scrollTop += scrollToEnd ? scrollStepSize : 0;
+}
+
+return setTimeout( () => setInterval(smoothScroll, {{ scroll_interval }}), {{ scroll_start_delay }} );

@@ -27,6 +27,7 @@ openai = "^1.35.7"
 tiktoken = "^0.7.0"
 humanize = "^4.9.0"
 tokencost = "^0.1.11"
+imageio = "^2.35.1"
 
 
 [build-system]
