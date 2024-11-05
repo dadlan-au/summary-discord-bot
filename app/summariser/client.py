@@ -5,7 +5,6 @@ from typing import Dict, List
 import discord
 import humanize
 import pytz
-from summariser.utils import parse_time_period
 from config import get_config
 from dadlan.client import get_variable, set_variable
 from discord import Interaction, Message
@@ -22,6 +21,7 @@ from summariser.schemas import (
     TokenHistory,
     TokenUserHistory,
 )
+from summariser.utils import parse_time_period
 
 log = get_logger(__name__)
 
@@ -299,7 +299,9 @@ class SummariserClient:
         needs_hydration = True
         if channel_id in self.messages and self.messages[channel_id]:
             # Find earliest message in cache
-            earliest_message = min(self.messages[channel_id], key=lambda m: m.created_at)
+            earliest_message = min(
+                self.messages[channel_id], key=lambda m: m.created_at
+            )
 
             log.debug(
                 "Earliest message in cache is %s, time period is %s",
@@ -389,13 +391,57 @@ class SummariserClient:
         message_age_threshold_dt = datetime.now(tz=pytz.UTC) - timedelta(
             seconds=config.SUMMARISER_MESSAGE_AGE_THRESHOLD
         )
-        log.debug("Pruning summariser cache messages older than %s", message_age_threshold_dt)
+        log.debug(
+            "Pruning summariser cache messages older than %s", message_age_threshold_dt
+        )
         for channel in self.messages:
             self.messages[channel] = [
                 m
                 for m in self.messages[channel]
                 if m.created_at > message_age_threshold_dt
             ]
+
+    async def generate_summary_daily_message(
+        self,
+        announce_channel: TextChannel,
+        channels: List[TextChannel],
+        threads: List[ForumChannel],
+    ):
+        """
+        Sends a daily summariser message to the announce channel
+        """
+
+        messages = []
+        for channel in channels:
+            messages.extend(
+                await self.get_messages(
+                    channel, datetime.now(tz=pytz.UTC) - timedelta(days=1)
+                )
+            )
+
+        for thread in threads:
+            messages.extend(
+                await self.get_messages(
+                    thread, datetime.now(tz=pytz.UTC) - timedelta(days=1)
+                )
+            )
+
+        if len(messages) == 0:
+            log.warn("No messages found to summarise")
+            return
+
+        prompt = await self.prepare_prompt(messages)
+        if prompt is None:
+            return
+
+        result = self.client.call_api(
+            prompt, temperature=self.temperature, max_tokens=self.max_tokens
+        )
+        await announce_channel.send(
+            "Here is the summary of the last 24 hours of messages in the Dad Life channels. "
+            "You can do this at any time in any channel using the `/digest` command.",
+            embed=discord.Embed(title="Summary", description=result.response),
+        )
 
     async def generate_summary(
         self, ctx: Interaction, public: bool, time_period: str = "24h"
@@ -441,7 +487,7 @@ class SummariserClient:
 
             messages = sorted(messages, key=lambda x: x.created_at, reverse=True)
 
-            prompt = await self.prepare_prompt(ctx, messages)  # type: ignore
+            prompt = await self.prepare_prompt(messages)  # type: ignore
             if prompt is None:
                 return
 
@@ -502,7 +548,7 @@ class SummariserClient:
             raise e
 
     async def prepare_prompt(
-        self, ctx: discord.Interaction, messages: List[ChatMessage]
+        self, messages: List[ChatMessage]
     ) -> List[Dict[str, str]] | None:
         """
         Prepares the prompt object for calling API

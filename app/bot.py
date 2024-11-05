@@ -1,4 +1,5 @@
 import io
+from typing import List
 import uuid
 from datetime import datetime, time
 from pathlib import Path
@@ -7,7 +8,7 @@ from zoneinfo import ZoneInfo
 import discord
 from channels.scanner import get_active_channels_and_threads, get_text_channel
 from config import AppSettings, get_config
-from discord import app_commands
+from discord import ForumChannel, TextChannel, app_commands
 from discord.ext import tasks
 from discord.message import Message
 from discordbot import DiscordBotClient
@@ -149,6 +150,24 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             )
         else:
             await announce_channel.send(announcement)
+
+        # Send the summary of the text chat to the announce channel
+        await daily_summariser_message(announce_channel, channels, threads)
+
+    async def daily_summariser_message(
+        announce_channel: TextChannel, channels: List[TextChannel], threads: List[ForumChannel]
+    ):
+        log.info(
+            "Running daily_summariser_message at %s", datetime.now(configured_tz)
+        )
+
+        try:
+            await client.summariser.generate_summary_daily_message(
+                announce_channel=announce_channel, channels=channels, threads=threads
+            )
+        except Exception as e:
+            log.error("Error generating daily summary: %s", e)
+
 
     # Command to inform when it will happen
     @client.event
