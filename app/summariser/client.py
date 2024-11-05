@@ -1,10 +1,11 @@
 import json
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import discord
 import humanize
 import pytz
+from summariser.utils import parse_time_period
 from config import get_config
 from dadlan.client import get_variable, set_variable
 from discord import Interaction, Message
@@ -12,7 +13,6 @@ from discord.channel import ForumChannel, TextChannel
 from discord.errors import DiscordException
 from dpn_pyutils.common import get_logger
 from render import split_rendered_text_max_length
-from summariser.messages import num_tokens_from_messages
 from summariser.openai import ChatGPTClient
 from summariser.schemas import (
     ChannelCacheResponse,
@@ -36,7 +36,7 @@ class SummariserClient:
 
     client: ChatGPTClient
     messages: Dict[int, List[ChatMessage]]
-    response_cache: Dict[int, ChannelCacheResponse]
+    response_cache: Dict[str, ChannelCacheResponse]
     temperature: float
     max_tokens: int
     model: str
@@ -287,16 +287,29 @@ class SummariserClient:
         ]
 
     async def get_messages(
-        self, channel: ForumChannel | TextChannel
+        self, channel: ForumChannel | TextChannel, time_period_dt: datetime
     ) -> List[ChatMessage]:
         """
-        Gets all messages for a channel
+        Gets all messages for a channel within the specified time period.
+        If the earliest cached message is more recent than time_period_dt,
+        it will re-hydrate messages from the channel history.
         """
-
         channel_id = channel.id  # type: ignore
 
-        if channel_id not in self.messages:
-            await self.hydrate_messages_channel(channel)
+        needs_hydration = True
+        if channel_id in self.messages and self.messages[channel_id]:
+            # Find earliest message in cache
+            earliest_message = min(self.messages[channel_id], key=lambda m: m.created_at)
+
+            log.debug(
+                "Earliest message in cache is %s, time period is %s",
+                earliest_message.created_at,
+                time_period_dt,
+            )
+            needs_hydration = earliest_message.created_at > time_period_dt
+
+        if needs_hydration:
+            await self.hydrate_messages_channel(channel, time_period_dt)
             if channel_id not in self.messages:
                 log.error(
                     "It appears that the bot does not have access to the channel %s",
@@ -376,7 +389,7 @@ class SummariserClient:
         message_age_threshold_dt = datetime.now(tz=pytz.UTC) - timedelta(
             seconds=config.SUMMARISER_MESSAGE_AGE_THRESHOLD
         )
-        log.debug("Pruning messages older than %s", message_age_threshold_dt)
+        log.debug("Pruning summariser cache messages older than %s", message_age_threshold_dt)
         for channel in self.messages:
             self.messages[channel] = [
                 m
@@ -384,7 +397,9 @@ class SummariserClient:
                 if m.created_at > message_age_threshold_dt
             ]
 
-    async def generate_summary(self, ctx: Interaction, public: bool):
+    async def generate_summary(
+        self, ctx: Interaction, public: bool, time_period: str = "24h"
+    ):
         """
         Generates a summary based on an interaction request
         """
@@ -401,9 +416,13 @@ class SummariserClient:
                 )
                 return
 
+            # Convert time period to datetime
+            time_period_dt = parse_time_period(time_period)
+
             # Check our response cache to see if we need to generate a new response
-            if channel_id in self.response_cache:
-                response = self.response_cache[channel_id]
+            cache_key = f"{channel_id}-{time_period}"
+            if cache_key in self.response_cache:
+                response = self.response_cache[cache_key]
                 if response.expires_at > datetime.now(tz=pytz.UTC):
                     relative_time_string = humanize.naturaltime(response.expires_at)
                     await self.send_response(
@@ -412,7 +431,8 @@ class SummariserClient:
                         public=public,
                     )
                     return
-            messages = await self.get_messages(ctx.channel)  # type: ignore
+
+            messages = await self.get_messages(ctx.channel, time_period_dt)  # type: ignore
             if not messages or len(messages) == 0:
                 await ctx.followup.send(
                     "No messages found in this channel to summarize", ephemeral=False
@@ -421,7 +441,7 @@ class SummariserClient:
 
             messages = sorted(messages, key=lambda x: x.created_at, reverse=True)
 
-            prompt, prompt_token_cost = await self.prepare_prompt(ctx, messages)  # type: ignore
+            prompt = await self.prepare_prompt(ctx, messages)  # type: ignore
             if prompt is None:
                 return
 
@@ -431,7 +451,6 @@ class SummariserClient:
             if result is None or result.response is None:
                 await ctx.followup.send("No response from AI received.", ephemeral=True)
 
-            log.debug("Estimated total token cost was %s", prompt_token_cost)
             log.debug("Actual total token cost was %s", result.total_tokens)
 
             self.update_token_history(
@@ -445,7 +464,8 @@ class SummariserClient:
             await self.send_response(ctx, result.response, public=public)
 
             # Cache the response for a period of time
-            self.response_cache[channel_id] = ChannelCacheResponse(
+            self.response_cache[cache_key] = ChannelCacheResponse(
+                key=cache_key,
                 response=result.response,
                 expires_at=datetime.now(tz=pytz.UTC)
                 + timedelta(seconds=config.SUMMARISER_RESPONSE_CACHE_EXPIRY),
@@ -483,7 +503,7 @@ class SummariserClient:
 
     async def prepare_prompt(
         self, ctx: discord.Interaction, messages: List[ChatMessage]
-    ) -> Tuple[List[Dict[str, str]], int] | None:
+    ) -> List[Dict[str, str]] | None:
         """
         Prepares the prompt object for calling API
         """
@@ -511,22 +531,6 @@ class SummariserClient:
             ),
         }
 
-        # Prompt token cost includes the prefix, suffix, and how much content we need
-        # to generate
-        prompt_token_cost = (
-            num_tokens_from_messages([prefix_prompt, suffix_prompt], self.model)
-            + self.max_tokens
-        )
-
-        log.debug("Prefix, suffix, and generated token cost is %s", prompt_token_cost)
-        if prompt_token_cost > config.OPENAI_MODEL_CONTEXT_WINDOW:
-            await ctx.followup.send(
-                "The prefix and suffix prompts are too long to summarize, please raise a #helpdesk ticket "
-                "and communicate this message.",
-                ephemeral=True,
-            )
-            return None
-
         prompt = [prefix_prompt]
 
         prompt_user_messages = []
@@ -536,26 +540,10 @@ class SummariserClient:
         for message in messages:
             prompt_entry = {
                 "role": "user",
-                "content": f"{message.display_name}: {message.message}",
+                "content": f"{message.created_at.astimezone(tz=pytz.timezone(config.TIMEZONE)).strftime('%Y-%m-%d %H:%M:%S')} {message.display_name}: {message.message}",
             }
-            estimated_token_cost = num_tokens_from_messages(
-                [prompt_entry],
-                self.model,
-            )
-            if (
-                prompt_token_cost + estimated_token_cost
-                > config.OPENAI_MODEL_CONTEXT_WINDOW
-            ):
-                log.debug(
-                    "Skipping message from %s due to token cost of %s exceeding model limit of %s",
-                    message.display_name,
-                    estimated_token_cost,
-                    config.OPENAI_MODEL_CONTEXT_WINDOW,
-                )
-                break
 
             prompt_user_messages.append(prompt_entry)
-            prompt_token_cost += estimated_token_cost
 
         # Reverse the prompt user messages so that the earlier messages are first and the
         # summarization is done chronologically
@@ -563,9 +551,7 @@ class SummariserClient:
 
         prompt.append(suffix_prompt)
 
-        log.debug(prompt)
-
-        return prompt, prompt_token_cost
+        return prompt
 
     async def send_mod_notification(self, ctx: Interaction, result: OpenAIResponse):
 
@@ -621,10 +607,7 @@ class SummariserClient:
             )
             for idx, m in enumerate(messages):
                 if idx == 0:
-                    message_embed = discord.Embed(
-                        title=f"Summary for {ctx.user.display_name}",
-                        description=m,
-                    )
+                    message_embed = discord.Embed(title="Summary", description=m)
                 else:
                     message_embed = discord.Embed(description=m)
 
@@ -634,9 +617,6 @@ class SummariserClient:
                 )
         else:
             await ctx.followup.send(
-                embed=discord.Embed(
-                    title=f"Summary for {ctx.user.display_name}",
-                    description=response,
-                ),
+                embed=discord.Embed(title="Summary", description=response),
                 ephemeral=(not public),
             )

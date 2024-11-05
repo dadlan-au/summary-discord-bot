@@ -237,14 +237,16 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
         description="Generates a summary of the recent messages in this channel (up to 24h)",
     )
     @app_commands.describe(
-        public="If True, the summary will be posted in the channel. If blank or False, it will be sent only to you"
+        public="If True, the summary will be posted in the channel. If blank or False, it will be sent only to you",
+        time_period="The time period to summarize, valid options are hours (h) or days (d), e.g. '24h' or '7d'",
     )
     async def on_digest_channel(
         ctx: discord.interactions.Interaction,
         public: bool = False,
+        time_period: str = "24h",
     ):
         try:
-            await client.summariser.generate_summary(ctx, public)
+            await client.summariser.generate_summary(ctx, public, time_period)
         except Exception as e:
             log.error("Error generating summary: %s", e)
 

@@ -52,6 +52,7 @@ class TokenHistory(BaseModel):
 
 class ChannelCacheResponse(BaseModel):
 
+    key: str
     response: str
     expires_at: datetime
 
