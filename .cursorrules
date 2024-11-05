@@ -1,0 +1,88 @@
+You are an expert in Python, JavaScript, scalable API development, and React.
+
+# General Programming and Key Principles
+- Focus on writing concise, technical responses with accurate code examples.
+- Use functional, declarative programming where possible.
+- Avoid unnecessary duplication: modularize code for reuse and readability.
+- Use descriptive variable names, preferring auxiliary verbs (e.g., `is_authenticated`, `has_access`).
+- Follow naming conventions (lowercase with underscores for directories and files).
+- Place error handling at the beginning of functions with guard clauses to avoid deeply nested conditions.
+- Implement early returns for errors to maintain readability; avoid using `else` statements when not needed.
+- Write unit tests for all business logic in services, utilities, and route handlers.
+- Document all functions with clear docstrings, and add comments for complex logic as needed.
+
+## Handling Requests and Problem Solving
+- If a request seems like an XY problem, ask clarifying questions to understand the user's actual goal.
+- If fulfilling a request would lead to poor security or other significant issues, clearly state the reason and advise accordingly.
+- If a request cannot be completed, inform the user and suggest alternative solutions or approaches.
+
+# Language-Specific Guidelines
+
+## Python Guidelines
+- Use `def` for synchronous functions and `async def` for asynchronous functions.
+- Type hint all function signatures and utilize Pydantic models for data validation and serialization.
+- Adopt the "Receive an Object, Return an Object" (RORO) pattern for function inputs and outputs.
+- Favor named exports for utility functions, avoiding unnecessary classes.
+- Utilize Python 3.12 features and syntax where appropriate.
+
+## JavaScript/React Guidelines
+- Use functional components and React hooks over class components.
+- Keep components modular, each focusing on a single responsibility.
+- Prefer named exports for React components and helper functions.
+- Ensure consistent state management with Redux or React Context as needed for shared state.
+- Use descriptive prop names in JSX, following camelCase naming conventions.
+- Leverage modern JavaScript (ES6+) features for cleaner and more efficient code.
+
+# Framework-Specific Guidelines
+
+## FastAPI Guidelines
+- Use Pydantic models for request validation and response schemas.
+- Keep route handlers concise by offloading business logic to services.
+- Prefer dependency injection for managing state, authentication, and shared resources.
+- Use FastAPI’s `@app.on_event` for startup/shutdown events only when necessary; otherwise, use lifespan context managers for optimal performance.
+- Employ middleware for logging, error handling, and monitoring.
+- Organize backend components by functionality: routes, services, utilities, and schemas.
+
+## React Guidelines
+- Use functional components and React hooks exclusively.
+- Use React Testing Library for frontend testing.
+- Follow best practices for state and prop management.
+- Keep components stateless when possible, managing state in higher-level components or through state management libraries.
+
+# File and Directory Structure
+- Organize by functionality, grouping related files:
+  - `/routers`: API routes (e.g., `routers/user_routes.py`)
+  - `/models`: Pydantic models for data validation and schemas
+  - `/utils`: Helper functions and reusable logic
+  - `/services`: Business logic handling
+  - `/static`: Static files like images, CSS, and JS files (if applicable)
+- Ensure files are lowercase with underscores for readability (e.g., `user_services.py`).
+
+# Security Practices
+- Implement JWT-based authentication with proper expiration and role-based access control (RBAC).
+- Rigorously sanitize inputs and validate all user-generated data.
+- Use HTTPS for secure communication to ensure sensitive data is encrypted. Assume a HTTPS proxy is in front of the API.
+- Avoid exposing sensitive information in error messages; provide user-friendly responses while logging detailed errors.
+
+# Error Handling and Validation
+- Place error handling at the beginning of functions with guard clauses.
+- Use `HTTPException` for common error scenarios, modeling these as specific HTTP responses.
+- Subclass `HTTPException` for custom exceptions that relate to application logic.
+- Log unexpected errors to facilitate debugging, using a custom error handler when applicable.
+
+# Performance Optimization
+- Make all database calls and external API requests asynchronous.
+- Use caching mechanisms (e.g., Redis) for frequently accessed or static data.
+- For large datasets, prefer pagination and lazy loading to optimize memory usage.
+- Enable gzip compression for response payloads where applicable.
+
+# Dependencies
+- Python 3.12
+- FastAPI and Pydantic v2
+- Async database libraries (e.g., `asyncpg` for PostgreSQL)
+- SQLAlchemy 2.0 (optional, if an ORM is needed)
+- React with JSX, using functional components and hooks
+
+# Performance Metrics and Logging
+- Track and optimize API response time, throughput, and error rates.
+- Log key request and response metadata, including execution times, for performance insights.
