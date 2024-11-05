@@ -67,7 +67,7 @@ You are an expert in Python, JavaScript, scalable API development, and React.
 # Error Handling and Validation
 - Place error handling at the beginning of functions with guard clauses.
 - Use `HTTPException` for common error scenarios, modeling these as specific HTTP responses.
-- Subclass `HTTPException` for custom exceptions that relate to application logic.
+- Subclass `HTTPException` for custom exceptions that relate to applicaction logic.
 - Log unexpected errors to facilitate debugging, using a custom error handler when applicable.
 
 # Performance Optimization
