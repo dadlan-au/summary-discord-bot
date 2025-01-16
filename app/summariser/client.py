@@ -440,7 +440,10 @@ class SummariserClient:
         await announce_channel.send(
             "Here is the summary of the last 24 hours of messages in the Dad Life channels. "
             "You can do this at any time in any channel using the `/digest` command.",
-            embed=discord.Embed(title="Summary", description=result.response),
+        )
+
+        await self.send_response_to_channel(
+            announce_channel, "Summary", result.response
         )
 
     async def generate_summary(
@@ -666,3 +669,26 @@ class SummariserClient:
                 embed=discord.Embed(title="Summary", description=response),
                 ephemeral=(not public),
             )
+
+    async def send_response_to_channel(
+        self, channel: discord.TextChannel, title: str, response: str
+    ):
+        """
+        Sends the response to the channel, ensuring that long responses are split into multiple messages
+        Note: channels and ctx.followup.send are different. ctx.followup.send is a webhook that has an
+        ephemeral parameter, channels are not.
+        """
+
+        if len(response) > config.DISCORD_MAX_EMBED_LENGTH:
+            messages = split_rendered_text_max_length(
+                response, config.DISCORD_MAX_EMBED_LENGTH
+            )
+            for idx, m in enumerate(messages):
+                if idx == 0:
+                    message_embed = discord.Embed(title=title, description=m)
+                else:
+                    message_embed = discord.Embed(description=m)
+
+                await channel.send(embed=message_embed)
+        else:
+            await channel.send(embed=discord.Embed(title=title, description=response))
