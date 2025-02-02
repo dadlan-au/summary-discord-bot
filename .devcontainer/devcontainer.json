@@ -1,0 +1,25 @@
+{
+	"name": "summarybot",
+	"build": {
+        "dockerfile": "Dockerfile",
+		"context": ".."
+    },
+	"runArgs": ["--platform=linux/amd64"],
+	"workspaceFolder": "/code",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/code,type=bind",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash"
+			}
+		},
+		"extensions": {
+			"platformOverride": "linux/amd64"
+		}
+	},
+	"features": {
+		// Disabled because trunk does not support arm64/aarch64 -> amd64 cross-platform
+		// "ghcr.io/trunk-io/devcontainer-feature/trunk:1": {},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	}
+}
