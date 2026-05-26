@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from config import get_config
-from openai import OpenAI
+from openai import AsyncOpenAI
 from summariser.messages import num_tokens_from_messages
 from summariser.schemas import OpenAIResponse
 
@@ -10,17 +10,17 @@ config = get_config()
 
 class ChatGPTClient:
 
-    client: OpenAI
+    client: AsyncOpenAI
 
     def __init__(self, model: str):
         self.model = model
-        self.client = OpenAI(
+        self.client = AsyncOpenAI(
             api_key=config.OPENAI_API_KEY,
             organization=config.OPENAI_ORG_ID,
             project=config.OPENAI_PROJECT_ID,
         )
 
-    def call_api(
+    async def call_api(
         self,
         prompt: List[Dict],
         model: str,
@@ -31,7 +31,7 @@ class ChatGPTClient:
         Calls the API with the supplied prompt and returns the response text.
         """
 
-        response = self.client.chat.completions.create(
+        response = await self.client.chat.completions.create(
             model=model,
             messages=prompt,  # type: ignore
             max_completion_tokens=max_tokens,
