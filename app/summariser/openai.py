@@ -34,7 +34,7 @@ class ChatGPTClient:
         response = self.client.chat.completions.create(
             model=model,
             messages=prompt,  # type: ignore
-            max_tokens=max_tokens,
+            max_completion_tokens=max_tokens,
             temperature=temperature,
         )
 
