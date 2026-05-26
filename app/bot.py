@@ -166,7 +166,10 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
                 announce_channel=announce_channel, channels=channels, threads=threads
             )
         except Exception as e:
-            log.error("Error generating daily summary: %s", e)
+            log.error("Error generating daily summary: %s", e, exc_info=True)
+            mod_channel = client.get_channel(config.SUMMARISER_MOD_CHANNEL)
+            if mod_channel:
+                await mod_channel.send(f"Daily summary failed:\n```{e}```")
 
 
     # Command to inform when it will happen
