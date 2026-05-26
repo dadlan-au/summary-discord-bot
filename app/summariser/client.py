@@ -428,7 +428,7 @@ class SummariserClient:
                 log.warning("Could not fit any messages into context window for channel %s", source.name)
                 continue
 
-            result = self.client.call_api(
+            result = await self.client.call_api(
                 prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens
             )
             if result and result.response:
@@ -494,7 +494,7 @@ class SummariserClient:
             if prompt is None:
                 return
 
-            result = self.client.call_api(
+            result = await self.client.call_api(
                 prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens
             )
             if result is None or result.response is None:
