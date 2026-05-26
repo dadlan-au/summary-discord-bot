@@ -23,7 +23,8 @@ class ChatGPTClient:
     def call_api(
         self,
         prompt: List[Dict],
-        max_tokens: int = 150,
+        model: str,
+        max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> OpenAIResponse:
         """
@@ -31,9 +32,9 @@ class ChatGPTClient:
         """
 
         response = self.client.chat.completions.create(
-            model=self.model,
+            model=model,
             messages=prompt,  # type: ignore
-            max_tokens=max_tokens,
+            max_completion_tokens=max_tokens,
             temperature=temperature,
         )
 
