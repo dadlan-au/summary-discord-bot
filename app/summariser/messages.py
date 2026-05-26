@@ -28,10 +28,15 @@ def format_messages_for_summary(messages: List[Dict]) -> str:
 def num_tokens_from_messages(messages, model="gpt-4o-mini") -> int:
     """
     Return the number of tokens used by a list of messages.
+    Falls back to gpt-4o-mini encoding for unrecognised models.
     """
 
     log.debug("Calculating token cost for messages using model '%s'", model)
-    prompt_cost = count_message_tokens(messages, model)
+    try:
+        prompt_cost = count_message_tokens(messages, model)
+    except Exception:
+        log.debug("Model '%s' not recognised by tokencost, falling back to gpt-4o-mini", model)
+        prompt_cost = count_message_tokens(messages, "gpt-4o-mini")
 
     log.debug("Prompt estimated token cost: %s", prompt_cost)
 
