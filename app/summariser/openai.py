@@ -2,6 +2,7 @@ from typing import Dict, List
 
 from config import get_config
 from openai import AsyncOpenAI
+from dpn_pyutils.common import get_logger
 from summariser.messages import num_tokens_from_messages
 from summariser.schemas import OpenAIResponse
 
