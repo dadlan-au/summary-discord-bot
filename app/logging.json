@@ -28,6 +28,11 @@
             "handlers": ["console"],
             "propagate": false
         }
+        "discord.gateway": {
+              "level": "WARNING",
+              "handlers": ["console"],
+              "propagate": false
+        }
     },
     "root": {
         "level": "INFO",
