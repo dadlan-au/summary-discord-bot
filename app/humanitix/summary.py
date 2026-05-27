@@ -1,13 +1,23 @@
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from config import get_config
 from dpn_pyutils.common import get_logger
 from humanitix.client import HumanitixClient
-from humanitix.models import Event, Tickets
+from humanitix.models import DateRange, Event, Tickets
 
 log = get_logger(__name__)
 
 config = get_config()
+
+
+def get_next_event_date(event: Event) -> DateRange | None:
+    now = datetime.now(timezone.utc)
+    upcoming = [
+        d for d in event.dates
+        if not d.disabled and not d.deleted and d.endDate > now
+    ]
+    return min(upcoming, key=lambda d: d.startDate) if upcoming else None
 
 
 async def create_summary_from_event_data(events: List[Event]):
@@ -18,7 +28,15 @@ async def create_summary_from_event_data(events: List[Event]):
     summary_data = []
     for e in events:
         client = HumanitixClient()
-        tickets = Tickets.model_validate(await client.get_event_tickets(e.id)).tickets
+
+        next_date = get_next_event_date(e)
+        if next_date is None:
+            log.warning("No upcoming date found for event %s (%s), skipping", e.name, e.id)
+            continue
+
+        tickets = Tickets.model_validate(
+            await client.get_event_tickets(e.id, event_date_id=next_date.id)
+        ).tickets
 
         event_name = str(e.name)
         try:  # if the event name is not in the expected format
