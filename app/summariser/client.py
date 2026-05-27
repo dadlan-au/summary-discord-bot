@@ -41,6 +41,7 @@ class SummariserClient:
     temperature: float
     max_tokens: int
     model: str
+    reasoning_effort: str | None
 
     def __init__(self):
         """
@@ -53,6 +54,7 @@ class SummariserClient:
         self.update_temperature()
         self.update_max_tokens()
         self.update_model()
+        self.update_reasoning_effort()
 
     def update_max_tokens(self) -> int:
         """
@@ -77,6 +79,16 @@ class SummariserClient:
 
         self.model = get_variable(config.SUMMARISER_VAR_MODEL, config.OPENAI_MODEL)
         return self.model
+
+    def update_reasoning_effort(self) -> str | None:
+        """
+        Updates the reasoning effort value from portal. Valid values: low, medium, high.
+        Empty string or unset means reasoning_effort is not sent to the API.
+        """
+
+        value = get_variable(config.SUMMARISER_VAR_REASONING_EFFORT, "")
+        self.reasoning_effort = value if value in ("low", "medium", "high") else None
+        return self.reasoning_effort
 
     def load_token_history(self) -> TokenHistory:
         """
@@ -429,7 +441,8 @@ class SummariserClient:
                 continue
 
             result = await self.client.call_api(
-                prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens
+                prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens,
+                reasoning_effort=self.reasoning_effort
             )
             if result and result.response:
                 results.append((source.name, result.response))
@@ -495,7 +508,8 @@ class SummariserClient:
                 return
 
             result = await self.client.call_api(
-                prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens
+                prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens,
+                reasoning_effort=self.reasoning_effort
             )
             if result is None or result.response is None:
                 await ctx.followup.send("No response from AI received.", ephemeral=True)
@@ -561,6 +575,8 @@ class SummariserClient:
         self.update_temperature()
         self.update_max_tokens()
         self.update_model()
+
+        self.update_reasoning_effort()
 
         prefix_prompt = {
             "role": "system",
