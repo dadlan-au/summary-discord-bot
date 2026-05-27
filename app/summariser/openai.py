@@ -6,7 +6,7 @@ from summariser.messages import num_tokens_from_messages
 from summariser.schemas import OpenAIResponse
 
 config = get_config()
-
+log = get_logger(__name__)
 
 class ChatGPTClient:
 
