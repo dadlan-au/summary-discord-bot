@@ -26,17 +26,22 @@ class ChatGPTClient:
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
+        reasoning_effort: str | None = None,
     ) -> OpenAIResponse:
         """
         Calls the API with the supplied prompt and returns the response text.
         """
 
-        response = await self.client.chat.completions.create(
+        kwargs = dict(
             model=model,
             messages=prompt,  # type: ignore
             max_completion_tokens=max_tokens,
             temperature=temperature,
         )
+        if reasoning_effort is not None:
+            kwargs["reasoning_effort"] = reasoning_effort
+
+        response = await self.client.chat.completions.create(**kwargs)
 
         total_tokens = 0
         completion_tokens = 0
