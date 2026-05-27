@@ -27,7 +27,7 @@
             "level": "ERROR",
             "handlers": ["console"],
             "propagate": false
-        }
+        },
         "discord.gateway": {
               "level": "WARNING",
               "handlers": ["console"],
