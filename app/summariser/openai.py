@@ -42,6 +42,7 @@ class ChatGPTClient:
             kwargs["reasoning_effort"] = reasoning_effort
 
         response = await self.client.chat.completions.create(**kwargs)
+        log.info("OpenAI request: model=%s max_tokens=%s temperature=%s reasoning_effort=%s", model, max_tokens, temperature, reasoning_effort)
 
         total_tokens = 0
         completion_tokens = 0
