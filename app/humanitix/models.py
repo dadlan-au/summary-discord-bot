@@ -25,6 +25,15 @@ class AdditionalQuestion(FlexibleBaseModel):
     question: str
 
 
+class DateRange(FlexibleBaseModel):
+
+    id: str = Field(..., alias="_id")
+    startDate: datetime
+    endDate: datetime
+    disabled: bool = False
+    deleted: bool = False
+
+
 class Event(FlexibleBaseModel):
 
     id: str = Field(..., alias="_id")
@@ -46,6 +55,7 @@ class Event(FlexibleBaseModel):
     timezone: str
     totalCapacity: int
     additionalQuestions: List[AdditionalQuestion]
+    dates: List[DateRange] = []
     # Many more fields defined at runtime
 
     # DadLAN-specific values
