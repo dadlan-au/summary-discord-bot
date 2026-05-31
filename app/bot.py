@@ -161,9 +161,14 @@ def create_bot(config: AppSettings) -> DiscordBotClient:
             "Running daily_summariser_message at %s", datetime.now(configured_tz)
         )
 
+        summary_thread = None
+        if config.SUMMARISER_THREAD_ID:
+            summary_thread = client.get_channel(config.SUMMARISER_THREAD_ID)
+
         try:
             await client.summariser.generate_summary_daily_message(
-                announce_channel=announce_channel, channels=channels, threads=threads
+                announce_channel=announce_channel, channels=channels, threads=threads,
+                summary_thread=summary_thread,
             )
         except Exception as e:
             log.error("Error generating daily summary: %s", e, exc_info=True)
