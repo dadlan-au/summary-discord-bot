@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List
 
 from dpn_pyutils.file import read_file_text
-from jinja2 import BaseLoader, Environment
+from jinja2 import BaseLoader, Environment, select_autoescape
 
 
 def render_template(template_file: Path, **kwargs) -> str:
@@ -10,7 +10,10 @@ def render_template(template_file: Path, **kwargs) -> str:
     Renders a list of channels and threads into a template string
     """
 
-    environment = Environment(loader=BaseLoader(), autoescape=True)
+    environment = Environment(
+        loader=BaseLoader(),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
 
     tpl = environment.from_string(
         read_file_text(template_file),
