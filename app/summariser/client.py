@@ -419,9 +419,11 @@ class SummariserClient:
         announce_channel: TextChannel,
         channels: List[TextChannel],
         threads: List[ForumChannel],
+        summary_thread: discord.Thread | None = None,
     ):
         """
-        Sends a daily summariser message to the announce channel, one summary per channel
+        Sends a daily summariser message. AI summaries go to summary_thread if provided,
+        otherwise falls back to announce_channel.
         """
 
         since = datetime.now(tz=pytz.UTC) - timedelta(days=1)
@@ -451,13 +453,15 @@ class SummariserClient:
             log.warning("No summaries generated for any channel")
             return
 
-        await announce_channel.send(
-            "Here is the summary of the last 24 hours of activity. "
-            "You can also do this at any time using the `/digest` command."
-        )
+        target = summary_thread if summary_thread else announce_channel
 
         for channel_name, response in results:
-            await self.send_response_to_channel(announce_channel, f"#{channel_name}", response)
+            await self.send_response_to_channel(target, f"#{channel_name}", response)
+
+        if summary_thread:
+            await announce_channel.send(
+                f"Today's AI digest is ready → {summary_thread.jump_url}"
+            )
 
     async def generate_summary(
         self, ctx: Interaction, public: bool, time_period: str = "24h"
