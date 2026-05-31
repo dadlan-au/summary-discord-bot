@@ -444,7 +444,7 @@ class SummariserClient:
                 prompt, model=self.model, temperature=self.temperature, max_tokens=self.max_tokens,
                 reasoning_effort=self.reasoning_effort
             )
-            if result and result.response:
+            if result and result.response and "not much to report" not in result.response.lower():
                 results.append((source.name, result.response))
 
         if not results:
