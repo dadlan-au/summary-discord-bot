@@ -144,13 +144,12 @@ class HumanitixClient:
                 event for event in events.events if event.published and event.public
             ]
 
+        needle = " ".join(event_name_fragment.lower().split())
         filtered_events = []
         for event in events.events:
-            if (
-                event_name_fragment.lower() in event.name.lower()
-                or event_name_fragment.lower() in event.slug.lower()
-                and (event.published and event.public)
-            ):
+            name = " ".join(event.name.lower().split())
+            slug = " ".join(event.slug.lower().split())
+            if needle in name or needle in slug:
                 filtered_events.append(event)
 
         return filtered_events if filtered_events else None
