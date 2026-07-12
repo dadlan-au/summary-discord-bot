@@ -38,20 +38,12 @@ async def create_summary_from_event_data(events: List[Event]):
             await client.get_event_tickets(e.id, event_date_id=next_date.id)
         ).tickets
 
-#        event_name = str(e.name)
-#        try:  # if the event name is not in the expected format
-#            event_name = "&nbsp;".join(event_name.split(" ")[1:-2])
-#        except IndexError:
-#            if config.RENDER_TIX_REPLACE_WORD_FROM_NAME != "":
-#                event_name = event_name.replace(
-#                    config.RENDER_TIX_REPLACE_WORD_FROM_NAME, ""
-#                )
-         event_name = str(e.name).strip()
-         if config.RENDER_TIX_REPLACE_WORD_FROM_NAME:
-             event_name = event_name.replace(
-                 config.RENDER_TIX_REPLACE_WORD_FROM_NAME, ""
-             ).strip()
-    
+        event_name = str(e.name).strip()
+        if config.RENDER_TIX_REPLACE_WORD_FROM_NAME:
+            event_name = event_name.replace(
+                config.RENDER_TIX_REPLACE_WORD_FROM_NAME, ""
+            ).strip()
+
         summary_event: Dict[str, Any] = {
             "id": e.id,
             "name": event_name,
